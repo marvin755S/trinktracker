@@ -1,7 +1,11 @@
 import { createClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
 
-export default async function Dashboard() {
+export default async function ProtectedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const supabase = await createClient();
 
   const {
@@ -30,13 +34,8 @@ export default async function Dashboard() {
   }
 
   return (
-    <main>
-      <h1>Dashboard</h1>
-      <p>Willkommen, {profile.name}!</p>
-
-      {profile.is_admin && (
-        <p>Du bist Administrator.</p>
-      )}
-    </main>
+    <>
+      {children}
+    </>
   );
 }
