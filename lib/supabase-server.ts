@@ -9,16 +9,16 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
+        async getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        async setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
           } catch {
-            // wird in Server Components ignoriert
+            // Server Component
           }
         },
       },
