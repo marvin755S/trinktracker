@@ -42,7 +42,7 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
     const sourceY = (cropImage.naturalHeight - cropSize) * verticalPosition;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(cropImage, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
-  }, [cropDiameter, cropImage, editorSize, horizontal, vertical, zoom]);
+  }, [cropDiameter, cropImage, editorSize, horizontal, horizontalPadding, vertical, verticalPadding, zoom]);
 
   useEffect(() => {
     const editor = cropEditor.current;
