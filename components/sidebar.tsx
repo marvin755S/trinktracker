@@ -155,9 +155,9 @@ export default function Sidebar({
         type="button"
         onClick={toggleTheme}
         className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-center text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 lg:mt-6 lg:text-left"
-        aria-label={theme === "light" ? "Dunkelmodus aktivieren" : "Hellmodus aktivieren"}
+        aria-label={theme === "light" ? "Darkmode aktivieren" : "Whitemode aktivieren"}
       >
-        {theme === "light" ? "Dunkelmodus" : "Hellmodus"}
+        {theme === "light" ? "Darkmode" : "Whitemode"}
       </button>
       <LogoutButton />
     </aside>

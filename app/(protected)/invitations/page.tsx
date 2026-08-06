@@ -75,8 +75,8 @@ export default async function InvitationsPage() {
           {incoming.map((inv) => (
             <li key={inv.id} className="flex items-center justify-between py-2">
               <div>
-                <div className="text-sm font-medium">Von: {inv.inviter_name || inv.created_by}</div>
-                <div className="text-xs text-zinc-500">Gruppe: {inv.group_name} • Status: {inv.status}</div>
+                <div className="text-sm font-medium">Von: {inv.inviter_name || inv.invited_email || inv.created_by}</div>
+                <div className="text-xs text-zinc-500">Gruppe: {inv.group_name || `Gruppe ${inv.group_id}`} • Status: {inv.status}</div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-sm text-zinc-500">{new Date(inv.created_at).toLocaleString()}</div>

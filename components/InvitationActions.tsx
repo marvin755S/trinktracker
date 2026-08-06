@@ -72,7 +72,7 @@ export default function InvitationActions({ invitation, currentUser, currentUser
       {isRecipient && (
         <>
           <button onClick={accept} className="rounded px-3 py-1 bg-green-600 text-white text-sm">Annehmen</button>
-          <button onClick={decline} className="rounded px-3 py-1 bg-zinc-200 text-sm">Ablehnen</button>
+          <button onClick={decline} className="rounded px-3 py-1 bg-red-600 text-white text-sm">Ablehnen</button>
         </>
       )}
     </div>
