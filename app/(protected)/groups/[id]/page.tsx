@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import DrinkForm from "./drink-form";
 
 type GroupPageProps = {
   params: Promise<{ id: string }>;
@@ -9,6 +10,9 @@ type GroupPageProps = {
 export default async function GroupPage({ params }: GroupPageProps) {
   const { id } = await params;
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const [{ data: group }, { data: members }] = await Promise.all([
     supabase.from("groups").select("id, name").eq("id", id).single(),
@@ -24,6 +28,38 @@ export default async function GroupPage({ params }: GroupPageProps) {
     ? await supabase.from("profiles").select("id, name").in("id", memberIds)
     : { data: [] };
   const namesById = new Map(profiles?.map((profile) => [profile.id, profile.name]));
+
+  const [{ data: categories }, { data: groupEvents }, { data: drinks }] = await Promise.all([
+    supabase.from("categories").select("id, name").eq("user_id", user!.id).order("name"),
+    supabase.from("events").select("id, name").eq("group_id", id).order("created_at"),
+    memberIds.length
+      ? supabase.from("drinks").select("user_id, amount").in("user_id", memberIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const eventIds = groupEvents?.map((event) => event.id) ?? [];
+  const { data: eventMemberships } = eventIds.length
+    ? await supabase
+        .from("event_members")
+        .select("event_id")
+        .eq("user_id", user!.id)
+        .in("event_id", eventIds)
+    : { data: [] };
+  const joinedEventIds = new Set(eventMemberships?.map((membership) => membership.event_id));
+  const events = groupEvents?.filter((event) => joinedEventIds.has(event.id)) ?? [];
+
+  const totalsByUser = new Map<string, number>();
+  drinks?.forEach((drink) => {
+    totalsByUser.set(drink.user_id, (totalsByUser.get(drink.user_id) ?? 0) + drink.amount);
+  });
+  const leaderboard = (members ?? [])
+    .map((member) => ({
+      id: member.user_id,
+      name: namesById.get(member.user_id) || "Unbekanntes Mitglied",
+      total: totalsByUser.get(member.user_id) ?? 0,
+    }))
+    .sort((left, right) => right.total - left.total);
+  const currentMembership = members?.find((member) => member.user_id === user?.id);
 
   return (
     <main className="mx-auto max-w-4xl space-y-8 px-6 py-10">
@@ -54,13 +90,37 @@ export default async function GroupPage({ params }: GroupPageProps) {
         </ul>
       </section>
 
+      <DrinkForm
+        categories={categories ?? []}
+        events={events}
+        groupId={id}
+        canCreateEvents={currentMembership?.role === "owner"}
+      />
+
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-semibold">Leaderboard</h2>
+        <p className="mt-1 text-sm text-zinc-600">Alle Getränke der Gruppenmitglieder.</p>
+        <ol className="mt-4 divide-y divide-zinc-100">
+          {leaderboard.map((entry, index) => (
+            <li key={entry.id} className="flex items-center justify-between py-3">
+              <span>{index + 1}. {entry.name}</span>
+              <strong>{entry.total}</strong>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <section className="rounded-xl border border-dashed border-zinc-300 p-6">
         <h2 className="text-xl font-semibold">Events</h2>
-        <p className="mt-2 text-zinc-600">
-          Hier erscheinen später Events wie „Sommerurlaub 2026“. Getränke ohne
-          Event bleiben trotzdem Teil deiner persönlichen Statistik und des
-          Gruppen-Leaderboards.
-        </p>
+        {groupEvents && groupEvents.length > 0 ? (
+          <ul className="mt-3 space-y-2">
+            {groupEvents.map((event) => <li key={event.id}>{event.name}</li>)}
+          </ul>
+        ) : (
+          <p className="mt-2 text-zinc-600">
+            Noch keine Events. Als Owner kannst du oben eines anlegen.
+          </p>
+        )}
       </section>
     </main>
   );
