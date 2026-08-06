@@ -15,6 +15,9 @@ export default function RegisterPage() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login`,
+      },
     });
 
     if (error) {
@@ -30,7 +33,7 @@ export default function RegisterPage() {
         .insert({
             id: user.id,
             name,
-            approved: false,
+            approved: true,
         });
 
         if (profileError) {
@@ -39,7 +42,7 @@ export default function RegisterPage() {
         }
     }
 
-    setMessage("Account erstellt. Warte auf Freischaltung.");
+    setMessage("Account erstellt. Bitte bestätige jetzt deine E-Mail-Adresse über den Link in deinem Postfach.");
   }
 
   return (

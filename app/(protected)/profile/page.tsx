@@ -12,7 +12,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("name, approved, is_admin, avatar_path")
+    .select("name, is_admin, avatar_path")
     .eq("id", user.id)
     .single();
 
@@ -31,10 +31,6 @@ export default async function ProfilePage() {
         <div className="py-4">
           <dt className="text-sm text-zinc-500">E-Mail</dt>
           <dd className="mt-1 font-medium">{user.email || "Nicht verfügbar"}</dd>
-        </div>
-        <div className="py-4">
-          <dt className="text-sm text-zinc-500">Status</dt>
-          <dd className="mt-1 font-medium">{profile?.approved ? "Freigeschaltet" : "Wartet auf Freischaltung"}</dd>
         </div>
         {profile?.is_admin && (
           <div className="py-4">

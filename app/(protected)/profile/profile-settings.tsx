@@ -3,7 +3,7 @@
 
 import { updateAvatarPath, updateProfileName } from "@/lib/profile-actions";
 import { createClient } from "@/lib/supabase";
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function ProfileSettings({ initialName, email, userId, avatarUrl }: { initialName: string; email: string; userId: string; avatarUrl: string | null }) {
@@ -14,6 +14,23 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
   const [avatarPreview, setAvatarPreview] = useState(avatarUrl);
+  const [cropImage, setCropImage] = useState<HTMLImageElement | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [horizontal, setHorizontal] = useState(50);
+  const [vertical, setVertical] = useState(50);
+  const cropCanvas = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!cropImage || !cropCanvas.current) return;
+    const canvas = cropCanvas.current;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+    const cropSize = Math.min(cropImage.naturalWidth, cropImage.naturalHeight) / zoom;
+    const sourceX = (cropImage.naturalWidth - cropSize) * (horizontal / 100);
+    const sourceY = (cropImage.naturalHeight - cropSize) * (vertical / 100);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(cropImage, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
+  }, [cropImage, horizontal, vertical, zoom]);
 
   async function saveName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,24 +75,50 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
     setMessage("Passwort geändert.");
   }
 
-  async function uploadAvatar(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const file = new FormData(event.currentTarget).get("avatar") as File | null;
-    if (!file || file.size === 0) return setMessage("Bitte wähle ein Bild aus.");
+  function selectAvatar(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024) {
-      return setMessage("Erlaubt sind JPG, PNG oder WebP bis maximal 2 MB.");
+      setMessage("Erlaubt sind JPG, PNG oder WebP bis maximal 2 MB.");
+      return;
     }
+    const image = new Image();
+    image.onload = () => {
+      setCropImage(image);
+      setZoom(1);
+      setHorizontal(50);
+      setVertical(50);
+      setMessage("Wähle den Bildausschnitt und speichere anschließend.");
+    };
+    image.src = URL.createObjectURL(file);
+  }
 
-    setMessage("");
+  async function saveAvatar() {
+    if (!cropCanvas.current || !cropImage) return setMessage("Bitte wähle zuerst ein Bild aus.");
+    const blob = await new Promise<Blob | null>((resolve) => cropCanvas.current?.toBlob(resolve, "image/jpeg", 0.9));
+    if (!blob) return setMessage("Der Bildausschnitt konnte nicht erstellt werden.");
     const path = `${userId}/avatar`;
     const supabase = createClient();
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type, cacheControl: "3600" });
+    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "3600" });
     if (uploadError) return setMessage(uploadError.message);
 
     const result = await updateAvatarPath(path);
     if (result.error) return setMessage(result.error);
-    setAvatarPreview(URL.createObjectURL(file));
+    setAvatarPreview(cropCanvas.current.toDataURL("image/jpeg"));
+    setCropImage(null);
     setMessage("Profilbild gespeichert.");
+    router.refresh();
+  }
+
+  async function removeAvatar() {
+    setMessage("");
+    const supabase = createClient();
+    const { error: removeError } = await supabase.storage.from("avatars").remove([`${userId}/avatar`]);
+    if (removeError) return setMessage(removeError.message);
+    const result = await updateAvatarPath(null);
+    if (result.error) return setMessage(result.error);
+    setAvatarPreview(null);
+    setMessage("Profilbild entfernt.");
     router.refresh();
   }
 
@@ -85,11 +128,22 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
         <h2 className="text-xl font-semibold">Profilbild</h2>
         <div className="mt-4 flex items-center gap-4">
           {avatarPreview ? <img className="h-20 w-20 rounded-full object-cover" src={avatarPreview} alt="Dein Profilbild" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-2xl font-bold text-sky-700">{initialName.slice(0, 1).toUpperCase()}</div>}
-          <form className="flex-1" onSubmit={uploadAvatar}>
-            <input className="block w-full text-sm" name="avatar" accept="image/jpeg,image/png,image/webp" type="file" />
-            <button className="mt-2 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium" type="submit">Bild hochladen</button>
-          </form>
+          <div className="flex-1">
+            <input className="block w-full text-sm" accept="image/jpeg,image/png,image/webp" type="file" onChange={selectAvatar} />
+            {avatarPreview && <button className="mt-2 rounded-md border border-red-300 px-4 py-2 text-sm font-medium text-red-700" type="button" onClick={removeAvatar}>Bild entfernen</button>}
+          </div>
         </div>
+        {cropImage && <div className="mt-5 rounded-lg bg-zinc-100 p-4">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+            <canvas ref={cropCanvas} width="512" height="512" className="h-40 w-40 rounded-full" aria-label="Vorschau des Bildausschnitts" />
+            <div className="w-full space-y-3">
+              <label className="grid gap-1 text-sm font-medium">Zoom<input min="1" max="3" step="0.05" type="range" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /></label>
+              <label className="grid gap-1 text-sm font-medium">Horizontaler Ausschnitt<input min="0" max="100" type="range" value={horizontal} onChange={(event) => setHorizontal(Number(event.target.value))} /></label>
+              <label className="grid gap-1 text-sm font-medium">Vertikaler Ausschnitt<input min="0" max="100" type="range" value={vertical} onChange={(event) => setVertical(Number(event.target.value))} /></label>
+              <button className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white" type="button" onClick={saveAvatar}>Ausschnitt speichern</button>
+            </div>
+          </div>
+        </div>}
       </section>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">

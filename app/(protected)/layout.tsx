@@ -19,24 +19,17 @@ export default async function ProtectedLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("*")
+    .select("name, is_admin, avatar_path")
     .eq("id", user.id)
     .single();
 
-  if (!profile?.approved) {
-    return (
-      <main>
-        <h1>Warte auf Freischaltung</h1>
-        <p>
-          Dein Account wurde erstellt, aber noch nicht freigegeben.
-        </p>
-      </main>
-    );
-  }
+  const { data: avatar } = profile?.avatar_path
+    ? await supabase.storage.from("avatars").createSignedUrl(profile.avatar_path, 60 * 60)
+    : { data: null };
 
   return (
     <div className="min-h-screen bg-zinc-50 pb-16 lg:pb-0 lg:pl-64">
-      <Sidebar name={profile.name} isAdmin={profile.is_admin} />
+      <Sidebar name={profile?.name || null} isAdmin={profile?.is_admin || false} avatarUrl={avatar?.signedUrl || null} />
       {children}
     </div>
   );

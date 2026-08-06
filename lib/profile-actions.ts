@@ -19,13 +19,13 @@ export async function updateProfileName(name: string): Promise<ActionResult> {
   return {};
 }
 
-export async function updateAvatarPath(path: string): Promise<ActionResult> {
+export async function updateAvatarPath(path: string | null): Promise<ActionResult> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || path !== `${user.id}/avatar`) return { error: "Ungültiger Bildpfad." };
+  if (!user || (path !== null && path !== `${user.id}/avatar`)) return { error: "Ungültiger Bildpfad." };
 
   const { error } = await supabase.rpc("update_own_avatar_path", { new_avatar_path: path });
   if (error) return { error: error.message };
