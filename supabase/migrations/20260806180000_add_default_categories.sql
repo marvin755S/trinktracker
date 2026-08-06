@@ -12,14 +12,11 @@ where user_id is null;
 
 insert into public.categories (name, user_id)
 values
-  ('Bier', null),
+  ('BIR', null),
+  ('Äppler', null),
+  ('Longdrink', null),
   ('Wein', null),
-  ('Sekt', null),
-  ('Cocktail', null),
-  ('Spirituose', null),
-  ('Shot', null),
-  ('Softdrink', null),
-  ('Wasser', null)
+  ('Shot', null)
 on conflict do nothing;
 
 create or replace function public.validate_drink_category()
