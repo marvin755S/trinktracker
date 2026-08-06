@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import EventForm from "./event-form";
+import GroupActions from "@/components/GroupActions";
 /* eslint-disable @next/next/no-img-element */
 
 type GroupPageProps = {
@@ -69,6 +70,12 @@ export default async function GroupPage({ params }: GroupPageProps) {
         <p className="text-sm font-medium text-sky-600">Gruppe</p>
         <h1 className="text-3xl font-bold">{group.name}</h1>
       </header>
+
+      {/* Group actions: invite members, delete group (owner only) */}
+      {/* @ts-ignore Server -> Client */}
+      <div>
+        <GroupActions groupId={String(id)} isOwner={currentMembership?.role === "owner"} />
+      </div>
 
       <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="flex items-baseline justify-between gap-4">

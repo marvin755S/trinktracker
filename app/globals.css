@@ -17,6 +17,63 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* ---------- Loading Overlay ---------- */
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.loading-card {
+  display: flex;
+  gap: 0.6rem;
+
+  padding: 1rem 1.4rem;
+
+  border-radius: 9999px;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.08);
+}
+
+@keyframes loading-dot-pulse {
+
+  0%,
+  100% {
+    transform: scale(0.75);
+    opacity: 0.35;
+    background: #7dd3fc;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+    background: #0284c7;
+  }
+
+}
+
+.loading-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+
+  border-radius: 9999px;
+
+  animation: loading-dot-pulse .9s ease-in-out infinite;
+
+  will-change: transform, opacity;
+}
 
 /* Increase contrast in the default light mode. */
 .text-zinc-500 {
@@ -30,6 +87,10 @@ body {
 [data-theme="dark"] {
   --background: #18181b;
   --foreground: #f4f4f5;
+}
+
+[data-theme="dark"] .loading-overlay {
+  background: rgb(24 24 27 / 0.58);
 }
 
 [data-theme="dark"] .bg-white {
