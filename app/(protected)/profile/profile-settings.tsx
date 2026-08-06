@@ -22,7 +22,7 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   const cropEditor = useRef<HTMLDivElement>(null);
   const [isDraggingCrop, setIsDraggingCrop] = useState(false);
   const [editorSize, setEditorSize] = useState({ width: 288, height: 288 });
-  const cropDiameter = Math.min(160, Math.min(editorSize.width, editorSize.height) * 0.72);
+  const cropDiameter = Math.min(editorSize.width, editorSize.height) / zoom;
   const horizontalPadding = ((cropDiameter / 2) / editorSize.width) * 100;
   const verticalPadding = ((cropDiameter / 2) / editorSize.height) * 100;
   const normalizedHorizontal = (horizontal - horizontalPadding) / (100 - horizontalPadding * 2);
