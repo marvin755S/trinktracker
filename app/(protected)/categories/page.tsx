@@ -31,7 +31,7 @@ export default async function CategoriesPage() {
         </ul>
       </section>
 
-      <CategoryManager categories={personalCategories} />
+      <CategoryManager categories={personalCategories} replacementCategories={categories ?? []} />
     </main>
   );
 }

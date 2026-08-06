@@ -59,7 +59,15 @@ export async function updateCategory(id: number, name: string): Promise<ActionRe
   return {};
 }
 
-export async function deleteCategory(id: number): Promise<ActionResult> {
+export async function resolveCategoryDeletion({
+  id,
+  mode,
+  targetCategoryId,
+}: {
+  id: number;
+  mode: "move" | "delete_drinks";
+  targetCategoryId?: number;
+}): Promise<ActionResult> {
   if (!Number.isInteger(id) || id < 1) return { error: "Ungültige Kategorie." };
 
   const supabase = await createClient();
@@ -69,16 +77,49 @@ export async function deleteCategory(id: number): Promise<ActionResult> {
 
   if (!user) return { error: "Du bist nicht eingeloggt." };
 
-  const { data: drinks, error: drinksError } = await supabase
-    .from("drinks")
+  const { data: category, error: categoryError } = await supabase
+    .from("categories")
     .select("id")
+    .eq("id", id)
     .eq("user_id", user.id)
-    .eq("category_id", id)
-    .limit(1);
+    .maybeSingle();
 
-  if (drinksError) return { error: drinksError.message };
-  if (drinks && drinks.length > 0) {
-    return { error: "Diese Kategorie wird noch von Getränken verwendet und kann nicht gelöscht werden." };
+  if (categoryError) return { error: categoryError.message };
+  if (!category) return { error: "Diese Kategorie darf nicht gelöscht werden." };
+
+  if (mode === "move") {
+    const targetId = targetCategoryId;
+    if (typeof targetId !== "number" || !Number.isInteger(targetId) || targetId < 1 || targetId === id) {
+      return { error: "Bitte wähle eine andere Zielkategorie." };
+    }
+
+    const { data: targetCategory, error: targetError } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("id", targetId)
+      .or(`user_id.eq.${user.id},user_id.is.null`)
+      .maybeSingle();
+
+    if (targetError) return { error: targetError.message };
+    if (!targetCategory) return { error: "Die Zielkategorie ist nicht verfügbar." };
+
+    const { error: moveError } = await supabase
+      .from("drinks")
+      .update({ category_id: targetId })
+      .eq("user_id", user.id)
+      .eq("category_id", id);
+
+    if (moveError) return { error: moveError.message };
+  } else if (mode === "delete_drinks") {
+    const { error: drinksError } = await supabase
+      .from("drinks")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("category_id", id);
+
+    if (drinksError) return { error: drinksError.message };
+  } else {
+    return { error: "Ungültige Löschoption." };
   }
 
   const { error } = await supabase
@@ -91,6 +132,7 @@ export async function deleteCategory(id: number): Promise<ActionResult> {
 
   revalidatePath("/categories");
   revalidatePath("/drinks");
+  revalidatePath("/groups/[id]", "page");
   return {};
 }
 

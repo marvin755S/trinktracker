@@ -1,16 +1,24 @@
 "use client";
 
-import { createCategory, deleteCategory, updateCategory } from "@/lib/drink-actions";
+import { createCategory, resolveCategoryDeletion, updateCategory } from "@/lib/drink-actions";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Category = { id: number; name: string };
 
-export default function CategoryManager({ categories }: { categories: Category[] }) {
+export default function CategoryManager({
+  categories,
+  replacementCategories,
+}: {
+  categories: Category[];
+  replacementCategories: Category[];
+}) {
   const router = useRouter();
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [targetCategoryId, setTargetCategoryId] = useState("");
   const [message, setMessage] = useState("");
 
   async function addCategory(event: FormEvent<HTMLFormElement>) {
@@ -32,12 +40,27 @@ export default function CategoryManager({ categories }: { categories: Category[]
     router.refresh();
   }
 
-  async function removeCategory(id: number, name: string) {
-    if (!window.confirm(`Kategorie „${name}“ wirklich löschen?`)) return;
+  async function moveAndDelete(id: number) {
     setMessage("");
-    const result = await deleteCategory(id);
+    const result = await resolveCategoryDeletion({
+      id,
+      mode: "move",
+      targetCategoryId: Number(targetCategoryId),
+    });
     if (result.error) return setMessage(result.error);
-    setMessage("Kategorie gelöscht.");
+    setDeletingId(null);
+    setTargetCategoryId("");
+    setMessage("Getränke verschoben und Kategorie gelöscht.");
+    router.refresh();
+  }
+
+  async function deleteWithDrinks(id: number, name: string) {
+    if (!window.confirm(`Kategorie „${name}“ und alle zugehörigen Getränke wirklich löschen?`)) return;
+    setMessage("");
+    const result = await resolveCategoryDeletion({ id, mode: "delete_drinks" });
+    if (result.error) return setMessage(result.error);
+    setDeletingId(null);
+    setMessage("Kategorie und zugehörige Getränke gelöscht.");
     router.refresh();
   }
 
@@ -54,22 +77,38 @@ export default function CategoryManager({ categories }: { categories: Category[]
       {categories.length > 0 ? (
         <ul className="mt-4 divide-y divide-zinc-100">
           {categories.map((category) => (
-            <li key={category.id} className="flex items-center gap-2 py-3">
-              {editingId === category.id ? (
-                <input className="min-w-0 flex-1 rounded-md border border-zinc-300 px-3 py-2" value={editingName} onChange={(event) => setEditingName(event.target.value)} />
-              ) : (
-                <span className="min-w-0 flex-1 font-medium">{category.name}</span>
-              )}
-              {editingId === category.id ? (
-                <>
-                  <button className="rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white" type="button" onClick={() => saveCategory(category.id)}>Speichern</button>
-                  <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => setEditingId(null)}>Abbrechen</button>
-                </>
-              ) : (
-                <>
-                  <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => { setEditingId(category.id); setEditingName(category.name); }}>Bearbeiten</button>
-                  <button className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-700" type="button" onClick={() => removeCategory(category.id, category.name)}>Löschen</button>
-                </>
+            <li key={category.id} className="py-3">
+              <div className="flex items-center gap-2">
+                {editingId === category.id ? (
+                  <input className="min-w-0 flex-1 rounded-md border border-zinc-300 px-3 py-2" value={editingName} onChange={(event) => setEditingName(event.target.value)} />
+                ) : (
+                  <span className="min-w-0 flex-1 font-medium">{category.name}</span>
+                )}
+                {editingId === category.id ? (
+                  <>
+                    <button className="rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white" type="button" onClick={() => saveCategory(category.id)}>Speichern</button>
+                    <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => setEditingId(null)}>Abbrechen</button>
+                  </>
+                ) : (
+                  <>
+                    <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => { setEditingId(category.id); setEditingName(category.name); }}>Bearbeiten</button>
+                    <button className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-700" type="button" onClick={() => { setDeletingId(category.id); setTargetCategoryId(""); }}>Löschen</button>
+                  </>
+                )}
+              </div>
+              {deletingId === category.id && (
+                <div className="mt-3 rounded-lg bg-zinc-100 p-3">
+                  <p className="text-sm font-medium">Was soll mit den Getränken dieser Kategorie passieren?</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <select className="min-w-40 rounded-md border border-zinc-300 px-3 py-2 text-sm" value={targetCategoryId} onChange={(event) => setTargetCategoryId(event.target.value)}>
+                      <option value="">Zielkategorie wählen</option>
+                      {replacementCategories.filter((item) => item.id !== category.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                    </select>
+                    <button className="rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white" type="button" onClick={() => moveAndDelete(category.id)}>Verschieben & löschen</button>
+                    <button className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-700" type="button" onClick={() => deleteWithDrinks(category.id, category.name)}>Getränke löschen</button>
+                    <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => setDeletingId(null)}>Abbrechen</button>
+                  </div>
+                </div>
               )}
             </li>
           ))}
