@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
+import Sidebar from "@/components/sidebar";
 
 export default async function ProtectedLayout({
   children,
@@ -34,8 +35,9 @@ export default async function ProtectedLayout({
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-zinc-50 pb-16 lg:pb-0 lg:pl-64">
+      <Sidebar name={profile.name} isAdmin={profile.is_admin} />
       {children}
-    </>
+    </div>
   );
 }
