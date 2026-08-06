@@ -30,33 +30,40 @@ export default async function InvitationsPage() {
     outgoing = outgoingData ?? [];
 
     // Lade zugehörige Gruppennamen
-    const groupIds = Array.from(new Set([...(incoming ?? []).map((i) => i.group_id), ...(outgoing ?? []).map((i) => i.group_id)]));
-    const groupsById = new Map();
+    const groupIds = Array.from(new Set([...(incoming ?? []).map((i) => String(i.group_id)), ...(outgoing ?? []).map((i) => String(i.group_id))]));
+    const groupsById = new Map<string, string>();
     if (groupIds.length) {
       const { data: groups } = await supabase.from("groups").select("id, name").in("id", groupIds);
-      groups?.forEach((g: any) => groupsById.set(g.id, g.name));
+      groups?.forEach((g: any) => groupsById.set(String(g.id), g.name));
     }
 
     // Lade Profilnamen für created_by und invited_user_id
-    const userIds = Array.from(new Set([...(incoming ?? []).map((i) => i.created_by).filter(Boolean), ...(outgoing ?? []).map((i) => i.created_by).filter(Boolean), ...(incoming ?? []).map((i) => i.invited_user_id).filter(Boolean), ...(outgoing ?? []).map((i) => i.invited_user_id).filter(Boolean)]));
-    const profilesById = new Map();
+    const userIds = Array.from(
+      new Set([
+        ...(incoming ?? []).map((i) => i.created_by).filter(Boolean),
+        ...(outgoing ?? []).map((i) => i.created_by).filter(Boolean),
+        ...(incoming ?? []).map((i) => i.invited_user_id).filter(Boolean),
+        ...(outgoing ?? []).map((i) => i.invited_user_id).filter(Boolean),
+      ]),
+    );
+    const profilesById = new Map<string, string>();
     if (userIds.length) {
-      const { data: profiles } = await supabase.from("profiles").select("id, name").in("id", userIds);
-      profiles?.forEach((p: any) => profilesById.set(p.id, p.name));
+      const { data: profiles } = await supabase.from("profiles").select("id, name").in("id", userIds.map(String));
+      profiles?.forEach((p: any) => profilesById.set(String(p.id), p.name));
     }
 
     // Attach names
     incoming = incoming.map((inv) => ({
       ...inv,
-      group_name: groupsById.get(inv.group_id) || String(inv.group_id),
-      inviter_name: profilesById.get(inv.created_by) || null,
-      invited_name: inv.invited_user_id ? profilesById.get(inv.invited_user_id) || null : null,
+      group_name: groupsById.get(String(inv.group_id)) || String(inv.group_id),
+      inviter_name: inv.created_by ? profilesById.get(String(inv.created_by)) || null : null,
+      invited_name: inv.invited_user_id ? profilesById.get(String(inv.invited_user_id)) || null : null,
     }));
     outgoing = outgoing.map((inv) => ({
       ...inv,
-      group_name: groupsById.get(inv.group_id) || String(inv.group_id),
-      inviter_name: profilesById.get(inv.created_by) || null,
-      invited_name: inv.invited_user_id ? profilesById.get(inv.invited_user_id) || null : null,
+      group_name: groupsById.get(String(inv.group_id)) || String(inv.group_id),
+      inviter_name: inv.created_by ? profilesById.get(String(inv.created_by)) || null : null,
+      invited_name: inv.invited_user_id ? profilesById.get(String(inv.invited_user_id)) || null : null,
     }));
   } catch (e: any) {
     invitationsError = e;
