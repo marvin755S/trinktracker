@@ -29,6 +29,68 @@ export async function createCategory(name: string): Promise<ActionResult> {
   if (error) return { error: error.message };
 
   revalidatePath("/drinks");
+  revalidatePath("/categories");
+  return {};
+}
+
+export async function updateCategory(id: number, name: string): Promise<ActionResult> {
+  const categoryName = validName(name);
+  if (!Number.isInteger(id) || id < 1 || !categoryName) {
+    return { error: "Bitte gib einen gültigen Kategorienamen ein." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Du bist nicht eingeloggt." };
+
+  const { error } = await supabase
+    .from("categories")
+    .update({ name: categoryName })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/categories");
+  revalidatePath("/drinks");
+  return {};
+}
+
+export async function deleteCategory(id: number): Promise<ActionResult> {
+  if (!Number.isInteger(id) || id < 1) return { error: "Ungültige Kategorie." };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Du bist nicht eingeloggt." };
+
+  const { data: drinks, error: drinksError } = await supabase
+    .from("drinks")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("category_id", id)
+    .limit(1);
+
+  if (drinksError) return { error: drinksError.message };
+  if (drinks && drinks.length > 0) {
+    return { error: "Diese Kategorie wird noch von Getränken verwendet und kann nicht gelöscht werden." };
+  }
+
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/categories");
+  revalidatePath("/drinks");
   return {};
 }
 
