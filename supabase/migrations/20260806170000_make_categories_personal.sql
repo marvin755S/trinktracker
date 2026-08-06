@@ -28,8 +28,7 @@ alter table public.categories
   alter column user_id set not null,
   add constraint categories_user_id_fkey
     foreign key (user_id) references public.profiles(id) on delete cascade,
-  drop column group_id,
-  add constraint categories_user_id_name_key unique (user_id, name);
+  drop column group_id;
 
 -- Correct the original column typo before implementing the drink UI.
 alter table public.drinks rename column categoy_id to category_id;
