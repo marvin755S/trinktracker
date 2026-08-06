@@ -22,17 +22,17 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   const cropEditor = useRef<HTMLDivElement>(null);
   const [isDraggingCrop, setIsDraggingCrop] = useState(false);
   const [editorSize, setEditorSize] = useState({ width: 288, height: 288 });
-  const cropDiameter = Math.min(editorSize.width, editorSize.height);
+  const cropDiameter = Math.min(editorSize.width, editorSize.height) * 0.78;
   const horizontalPadding = ((cropDiameter / 2) / editorSize.width) * 100;
   const verticalPadding = ((cropDiameter / 2) / editorSize.height) * 100;
   const horizontalRange = 100 - horizontalPadding * 2;
   const verticalRange = 100 - verticalPadding * 2;
   const horizontalPosition = horizontalRange > 0 ? (horizontal - horizontalPadding) / horizontalRange : 0;
   const verticalPosition = verticalRange > 0 ? (vertical - verticalPadding) / verticalRange : 0;
-  const cropSourceSize = cropImage ? Math.min(cropImage.naturalWidth, cropImage.naturalHeight) / zoom : 0;
+  const displayScale = cropImage ? Math.min(editorSize.width, editorSize.height) / Math.min(cropImage.naturalWidth, cropImage.naturalHeight) : 1;
+  const cropSourceSize = cropImage ? cropDiameter / (zoom * displayScale) : 0;
   const cropSourceX = cropImage ? (cropImage.naturalWidth - cropSourceSize) * horizontalPosition : 0;
   const cropSourceY = cropImage ? (cropImage.naturalHeight - cropSourceSize) * verticalPosition : 0;
-  const displayScale = cropImage ? Math.min(editorSize.width, editorSize.height) / Math.min(cropImage.naturalWidth, cropImage.naturalHeight) : 1;
   const imageOffsetX = (horizontal / 100) * editorSize.width - cropDiameter / 2 - zoom * displayScale * cropSourceX;
   const imageOffsetY = (vertical / 100) * editorSize.height - cropDiameter / 2 - zoom * displayScale * cropSourceY;
 
