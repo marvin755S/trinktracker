@@ -53,7 +53,7 @@ export default async function ProtectedLayout({
 
 
   return (
-    <div className="min-h-screen bg-zinc-50 pb-16 lg:pb-0 lg:pl-64">
+    <div className="min-h-screen bg-zinc-50 pt-5 lg:pt-0 pb-16 lg:pb-0 lg:pl-64">
       <Sidebar
         name={profile?.name || null}
         isAdmin={profile?.is_admin || false}

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import CreateGroup from "./create-group";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 type GroupMembership = {
   role: "owner" | "member";
@@ -17,7 +18,7 @@ export default async function Dashboard() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
+  const userId = user?.id ?? redirect('/login');
 
   const { data: groupMemberships } = await supabase
     .from("group_members")
@@ -28,7 +29,7 @@ export default async function Dashboard() {
         name
       )
     `)
-    .eq("user_id", user!.id);
+    .eq("user_id", userId);
   const groups = groupMemberships as unknown as GroupMembership[] | null;
   const uniqueMemberships = groups ? Array.from(new Map(groups.map((g) => [g.groups.id, g])).values()) : [];
 

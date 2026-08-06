@@ -102,11 +102,98 @@ export default function Sidebar({
   if (isAdmin) {
     items.push({ href: "/admin", label: "Admin", active: pathname === "/admin" });
   }
+  const [open, setOpen] = useState(false);
 
   return (
-    <aside className="fixed inset-x-0 bottom-0 z-20 border-t border-zinc-200 bg-white px-3 py-2 shadow-lg lg:inset-y-0 lg:left-0 lg:right-auto lg:w-64 lg:border-r lg:border-t-0 lg:px-5 lg:py-6">
+    <>
+      {/* Mobile hamburger */}
+      <button
+        aria-label="Menü öffnen"
+        onClick={() => setOpen((v) => !v)}
+        className={`${open ? 'hidden' : ''} fixed top-3 left-3 z-60 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-zinc-800 shadow lg:hidden`}
+      >
+        <svg className="h-6 w-6 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Mobile drawer */}
+      <div className={`fixed inset-0 z-40 lg:hidden ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
+        <div className={`fixed inset-0 bg-black/40 transition-opacity ${open ? 'opacity-100' : 'opacity-0'}`} onClick={() => setOpen(false)} />
+        <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-white dark:bg-zinc-900 px-5 pt-12 pb-6 shadow-lg transition-transform ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="mb-4 relative">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-sky-600 dark:text-sky-400">Drink Tracker</p>
+                <div className="mt-2 flex items-center gap-2">
+                  {avatarUrl ? <img className="h-9 w-9 rounded-full object-cover" src={avatarUrl} alt="Profilbild" /> : <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-700">{(name || "P").slice(0, 1).toUpperCase()}</div>}
+                  <p className="truncate text-lg font-semibold">{name || "Mein Profil"}</p>
+                </div>
+              </div>
+                <button onClick={() => setOpen(false)} className="fixed top-5 right-3 z-60 rounded p-1 hover:bg-zinc-100 lg:hidden">
+                <span className="sr-only">Schließen</span>
+                <svg className="h-5 w-5 text-zinc-700" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <nav className="flex flex-col gap-2" aria-label="Hauptnavigation">
+            {items.map((item) => (
+              <Link
+                key={`mobile-${item.href}`}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                aria-current={item.active ? "page" : undefined}
+                className={`rounded-lg px-3 py-2 text-left text-sm font-medium transition ${
+                  item.active ? "bg-sky-600 text-white" : "text-zinc-600 hover:bg-zinc-100"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="mt-6">
+            <p className="mb-2 text-sm font-medium text-zinc-500">Deine Gruppen</p>
+            <ul className="space-y-1">
+              {groups.length === 0 && <li className="text-sm text-zinc-500">Keine Gruppen</li>}
+              {groups.map((g) => {
+                const isActive = pathname === `/groups/${g.id}` || pathname.startsWith(`/groups/${g.id}/`);
+                return (
+                  <li key={`mobile-group-${g.id}`}>
+                    <Link
+                      href={`/groups/${g.id}`}
+                      onClick={() => setOpen(false)}
+                      className={`block rounded-lg px-3 py-2 text-sm transition ${isActive ? "bg-sky-600 text-white" : "text-zinc-600 hover:bg-zinc-100"}`}
+                    >
+                      <span className={`${isActive ? "font-semibold" : ""}`}>{g.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={() => { toggleTheme(); setOpen(false); }}
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-left text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+            >
+              {theme === "light" ? "Darkmode" : "Whitemode"}
+            </button>
+            <div className="mt-3">
+              <LogoutButton />
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {/* Desktop sidebar (hidden on mobile) */}
+      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:right-auto lg:z-20 lg:w-64 lg:border-r lg:border-t-0 lg:px-5 lg:py-6 lg:block bg-white dark:bg-zinc-900 lg:shadow">
       <div className="hidden lg:block">
-        <p className="text-sm font-medium text-sky-600">Drink Tracker</p>
+        <p className="text-sm font-medium text-sky-600 dark:text-sky-400">Drink Tracker</p>
         <div className="mt-2 flex items-center gap-2">
           {avatarUrl ? <img className="h-9 w-9 rounded-full object-cover" src={avatarUrl} alt="Profilbild" /> : <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-700">{(name || "P").slice(0, 1).toUpperCase()}</div>}
           <p className="truncate text-lg font-semibold">{name || "Mein Profil"}</p>
@@ -161,6 +248,7 @@ export default function Sidebar({
       </button>
       <LogoutButton />
     </aside>
+    </>
   );
 }
 
