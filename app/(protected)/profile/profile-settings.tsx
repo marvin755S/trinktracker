@@ -25,10 +25,6 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   const cropDiameter = Math.min(editorSize.width, editorSize.height) / zoom;
   const horizontalPadding = ((cropDiameter / 2) / editorSize.width) * 100;
   const verticalPadding = ((cropDiameter / 2) / editorSize.height) * 100;
-  const normalizedHorizontal = (horizontal - horizontalPadding) / (100 - horizontalPadding * 2);
-  const normalizedVertical = (vertical - verticalPadding) / (100 - verticalPadding * 2);
-  const imageOffsetX = (0.5 - normalizedHorizontal) * (zoom - 1) * editorSize.width;
-  const imageOffsetY = (0.5 - normalizedVertical) * (zoom - 1) * editorSize.height;
 
   useEffect(() => {
     if (!cropImage || !cropCanvas.current) return;
@@ -113,6 +109,7 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   function selectAvatar(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+    event.target.value = "";
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 2 * 1024 * 1024) {
       setMessage("Erlaubt sind JPG, PNG oder WebP bis maximal 2 MB.");
       return;
@@ -192,7 +189,6 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
               src={cropImage.src}
               alt="Bild für den Profilausschnitt"
               draggable={false}
-              style={{ transform: `translate(${imageOffsetX}px, ${imageOffsetY}px) scale(${zoom})`, transformOrigin: "center" }}
             />
             <div
               className="absolute cursor-grab rounded-full border-2 border-white shadow-[0_0_0_999px_rgba(0,0,0,0.55)] active:cursor-grabbing"
