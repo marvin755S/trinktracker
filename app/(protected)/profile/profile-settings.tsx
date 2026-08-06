@@ -28,8 +28,14 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
     const context = canvas.getContext("2d");
     if (!context) return;
     const cropSize = Math.min(cropImage.naturalWidth, cropImage.naturalHeight) / zoom;
-    const sourceX = (cropImage.naturalWidth - cropSize) * (horizontal / 100);
-    const sourceY = (cropImage.naturalHeight - cropSize) * (vertical / 100);
+    const circleRadius = 80;
+    const editorSize = 288;
+    const edgePadding = (circleRadius / editorSize) * 100;
+    const movableRange = 100 - edgePadding * 2;
+    const horizontalPosition = (horizontal - edgePadding) / movableRange;
+    const verticalPosition = (vertical - edgePadding) / movableRange;
+    const sourceX = (cropImage.naturalWidth - cropSize) * horizontalPosition;
+    const sourceY = (cropImage.naturalHeight - cropSize) * verticalPosition;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(cropImage, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
   }, [cropImage, horizontal, vertical, zoom]);
