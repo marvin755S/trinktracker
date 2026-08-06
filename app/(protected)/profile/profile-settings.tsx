@@ -21,6 +21,8 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   const cropCanvas = useRef<HTMLCanvasElement>(null);
   const cropEditor = useRef<HTMLDivElement>(null);
   const [isDraggingCrop, setIsDraggingCrop] = useState(false);
+  const [editorSize, setEditorSize] = useState({ width: 288, height: 288 });
+  const cropDiameter = Math.min(160, Math.min(editorSize.width, editorSize.height) * 0.72);
 
   useEffect(() => {
     if (!cropImage || !cropCanvas.current) return;
@@ -28,17 +30,26 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
     const context = canvas.getContext("2d");
     if (!context) return;
     const cropSize = Math.min(cropImage.naturalWidth, cropImage.naturalHeight) / zoom;
-    const circleRadius = 80;
-    const editorSize = 288;
-    const edgePadding = (circleRadius / editorSize) * 100;
-    const movableRange = 100 - edgePadding * 2;
-    const horizontalPosition = (horizontal - edgePadding) / movableRange;
-    const verticalPosition = (vertical - edgePadding) / movableRange;
+    const circleRadius = cropDiameter / 2;
+    const horizontalPadding = (circleRadius / editorSize.width) * 100;
+    const verticalPadding = (circleRadius / editorSize.height) * 100;
+    const horizontalPosition = (horizontal - horizontalPadding) / (100 - horizontalPadding * 2);
+    const verticalPosition = (vertical - verticalPadding) / (100 - verticalPadding * 2);
     const sourceX = (cropImage.naturalWidth - cropSize) * horizontalPosition;
     const sourceY = (cropImage.naturalHeight - cropSize) * verticalPosition;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(cropImage, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
-  }, [cropImage, horizontal, vertical, zoom]);
+  }, [cropDiameter, cropImage, editorSize, horizontal, vertical, zoom]);
+
+  useEffect(() => {
+    const editor = cropEditor.current;
+    if (!editor || !cropImage) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setEditorSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(editor);
+    return () => observer.disconnect();
+  }, [cropImage]);
 
   useEffect(() => {
     const editor = cropEditor.current;
@@ -117,7 +128,7 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   function moveCrop(clientX: number, clientY: number) {
     const rect = cropEditor.current?.getBoundingClientRect();
     if (!rect) return;
-    const circleRadius = 80;
+    const circleRadius = cropDiameter / 2;
     const minHorizontal = (circleRadius / rect.width) * 100;
     const minVertical = (circleRadius / rect.height) * 100;
     setHorizontal(Math.max(minHorizontal, Math.min(100 - minHorizontal, ((clientX - rect.left) / rect.width) * 100)));
@@ -167,21 +178,22 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
         {cropImage && <div className="mt-5 rounded-lg bg-zinc-100 p-4">
           <div
             ref={cropEditor}
-            className="relative mx-auto h-72 w-72 touch-none overflow-hidden rounded-lg bg-zinc-900"
+            className="relative mx-auto w-full max-w-lg touch-none overflow-hidden rounded-lg bg-zinc-900"
+            style={{ aspectRatio: `${cropImage.naturalWidth} / ${cropImage.naturalHeight}` }}
             onPointerMove={(event) => { if (isDraggingCrop) moveCrop(event.clientX, event.clientY); }}
             onPointerUp={() => setIsDraggingCrop(false)}
             onPointerLeave={() => setIsDraggingCrop(false)}
           >
             <img
-              className="h-full w-full select-none object-cover"
+              className="h-full w-full select-none object-contain"
               src={cropImage.src}
               alt="Bild für den Profilausschnitt"
               draggable={false}
               style={{ transform: `scale(${zoom})`, transformOrigin: `${horizontal}% ${vertical}%` }}
             />
             <div
-              className="absolute h-40 w-40 cursor-grab rounded-full border-2 border-white shadow-[0_0_0_999px_rgba(0,0,0,0.55)] active:cursor-grabbing"
-              style={{ left: `calc(${horizontal}% - 5rem)`, top: `calc(${vertical}% - 5rem)` }}
+              className="absolute cursor-grab rounded-full border-2 border-white shadow-[0_0_0_999px_rgba(0,0,0,0.55)] active:cursor-grabbing"
+              style={{ width: cropDiameter, height: cropDiameter, left: `calc(${horizontal}% - ${cropDiameter / 2}px)`, top: `calc(${vertical}% - ${cropDiameter / 2}px)` }}
               onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); setIsDraggingCrop(true); moveCrop(event.clientX, event.clientY); }}
             />
           </div>
