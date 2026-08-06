@@ -111,8 +111,11 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   function moveCrop(clientX: number, clientY: number) {
     const rect = cropEditor.current?.getBoundingClientRect();
     if (!rect) return;
-    setHorizontal(Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100)));
-    setVertical(Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100)));
+    const circleRadius = 80;
+    const minHorizontal = (circleRadius / rect.width) * 100;
+    const minVertical = (circleRadius / rect.height) * 100;
+    setHorizontal(Math.max(minHorizontal, Math.min(100 - minHorizontal, ((clientX - rect.left) / rect.width) * 100)));
+    setVertical(Math.max(minVertical, Math.min(100 - minVertical, ((clientY - rect.top) / rect.height) * 100)));
   }
 
   async function saveAvatar() {
