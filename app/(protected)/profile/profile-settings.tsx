@@ -23,6 +23,12 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   const [isDraggingCrop, setIsDraggingCrop] = useState(false);
   const [editorSize, setEditorSize] = useState({ width: 288, height: 288 });
   const cropDiameter = Math.min(160, Math.min(editorSize.width, editorSize.height) * 0.72);
+  const horizontalPadding = ((cropDiameter / 2) / editorSize.width) * 100;
+  const verticalPadding = ((cropDiameter / 2) / editorSize.height) * 100;
+  const normalizedHorizontal = (horizontal - horizontalPadding) / (100 - horizontalPadding * 2);
+  const normalizedVertical = (vertical - verticalPadding) / (100 - verticalPadding * 2);
+  const imageOffsetX = (0.5 - normalizedHorizontal) * (zoom - 1) * editorSize.width;
+  const imageOffsetY = (0.5 - normalizedVertical) * (zoom - 1) * editorSize.height;
 
   useEffect(() => {
     if (!cropImage || !cropCanvas.current) return;
@@ -30,9 +36,6 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
     const context = canvas.getContext("2d");
     if (!context) return;
     const cropSize = Math.min(cropImage.naturalWidth, cropImage.naturalHeight) / zoom;
-    const circleRadius = cropDiameter / 2;
-    const horizontalPadding = (circleRadius / editorSize.width) * 100;
-    const verticalPadding = (circleRadius / editorSize.height) * 100;
     const horizontalPosition = (horizontal - horizontalPadding) / (100 - horizontalPadding * 2);
     const verticalPosition = (vertical - verticalPadding) / (100 - verticalPadding * 2);
     const sourceX = (cropImage.naturalWidth - cropSize) * horizontalPosition;
@@ -189,7 +192,7 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
               src={cropImage.src}
               alt="Bild für den Profilausschnitt"
               draggable={false}
-              style={{ transform: `scale(${zoom})`, transformOrigin: `${horizontal}% ${vertical}%` }}
+              style={{ transform: `translate(${imageOffsetX}px, ${imageOffsetY}px) scale(${zoom})`, transformOrigin: "center" }}
             />
             <div
               className="absolute cursor-grab rounded-full border-2 border-white shadow-[0_0_0_999px_rgba(0,0,0,0.55)] active:cursor-grabbing"
