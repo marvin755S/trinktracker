@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type NavigationItem = {
   href: string;
@@ -17,6 +18,26 @@ export default function Sidebar({
   isAdmin: boolean;
 }) {
   const pathname = usePathname();
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      const frame = window.requestAnimationFrame(() => {
+        setTheme("dark");
+        document.documentElement.dataset.theme = "dark";
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, []);
+
+  function toggleTheme() {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+    window.localStorage.setItem("theme", nextTheme);
+  }
+
   const items: NavigationItem[] = [
     { href: "/dashboard", label: "Dashboard", active: pathname === "/dashboard" },
     { href: "/profile", label: "Profil", active: pathname === "/profile" },
@@ -53,6 +74,15 @@ export default function Sidebar({
           </Link>
         ))}
       </nav>
+
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="mt-2 w-full rounded-lg border border-zinc-300 px-3 py-2 text-center text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 lg:mt-6 lg:text-left"
+        aria-label={theme === "light" ? "Dunkelmodus aktivieren" : "Hellmodus aktivieren"}
+      >
+        {theme === "light" ? "Dunkelmodus" : "Hellmodus"}
+      </button>
     </aside>
   );
 }
