@@ -20,7 +20,8 @@ export default async function EventPage({ params }: EventPageProps) {
     notFound();
   }
 
-  const memberIds = members?.map((member) => member.user_id) ?? [];
+  const uniqueMembers = members ? Array.from(new Map(members.map((m: any) => [m.user_id, m])).values()) : [];
+  const memberIds = uniqueMembers.map((member) => member.user_id) ?? [];
   const { data: profiles } = memberIds.length
     ? await supabase.from("profiles").select("id, name, avatar_path").in("id", memberIds)
     : { data: [] };
@@ -49,7 +50,7 @@ export default async function EventPage({ params }: EventPageProps) {
   }
   const categoryMap = new Map(categories?.map((category) => [String(category.id), category.name]));
 
-  const leaderboard = (members ?? []).map((member) => {
+  const leaderboard = uniqueMembers.map((member) => {
     const counts: Record<string, number> = {};
     let total = 0;
 

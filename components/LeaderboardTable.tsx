@@ -23,28 +23,40 @@ export default function LeaderboardTable({
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const sortedRows = useMemo(() => {
-    return [...rows].sort((left, right) => {
-      let leftValue: string | number = 0;
-      let rightValue: string | number = 0;
+    return rows
+      .map((row, originalIndex) => ({ row, originalIndex }))
+      .sort((leftItem, rightItem) => {
+        const left = leftItem.row;
+        const right = rightItem.row;
 
-      if (sortKey === "name") {
-        leftValue = left.name.toLowerCase();
-        rightValue = right.name.toLowerCase();
-      } else if (sortKey === "total") {
-        leftValue = left.total;
-        rightValue = right.total;
-      } else {
-        leftValue = left.counts[sortKey] ?? 0;
-        rightValue = right.counts[sortKey] ?? 0;
-      }
+        let leftValue: string | number = 0;
+        let rightValue: string | number = 0;
 
-      if (typeof leftValue === "string" && typeof rightValue === "string") {
-        const compare = leftValue.localeCompare(rightValue);
-        return sortDir === "asc" ? compare : -compare;
-      }
+        if (sortKey === "name") {
+          leftValue = left.name.toLowerCase();
+          rightValue = right.name.toLowerCase();
+        } else if (sortKey === "total") {
+          leftValue = left.total;
+          rightValue = right.total;
+        } else {
+          leftValue = left.counts[sortKey] ?? 0;
+          rightValue = right.counts[sortKey] ?? 0;
+        }
 
-      return sortDir === "asc" ? (leftValue as number) - (rightValue as number) : (rightValue as number) - (leftValue as number);
-    });
+        let result = 0;
+        if (typeof leftValue === "string" && typeof rightValue === "string") {
+          result = leftValue.localeCompare(rightValue);
+        } else {
+          result = (leftValue as number) - (rightValue as number);
+        }
+
+        if (result === 0) {
+          return leftItem.originalIndex - rightItem.originalIndex;
+        }
+
+        return sortDir === "asc" ? result : -result;
+      })
+      .map(({ row }) => row);
   }, [rows, sortKey, sortDir]);
 
   function toggleSort(key: string) {
@@ -83,7 +95,7 @@ export default function LeaderboardTable({
         </thead>
         <tbody>
           {sortedRows.map((row, index) => (
-            <tr key={row.id} className="border-t border-zinc-100 hover:bg-zinc-50">
+            <tr key={`${row.id}-${index}`} className="border-t border-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-800">
               <td className="whitespace-nowrap px-3 py-2 text-zinc-600">{index + 1}</td>
               <td className="flex items-center gap-3 whitespace-nowrap px-3 py-2">
                 {row.avatarUrl ? (

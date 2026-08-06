@@ -30,6 +30,7 @@ export default async function Dashboard() {
     `)
     .eq("user_id", user!.id);
   const groups = groupMemberships as unknown as GroupMembership[] | null;
+  const uniqueMemberships = groups ? Array.from(new Map(groups.map((g) => [g.groups.id, g])).values()) : [];
 
 
   return (
@@ -48,7 +49,7 @@ export default async function Dashboard() {
 
         {groups && groups.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2">
-            {groups.map((item) => (
+            {uniqueMemberships.map((item) => (
               <Link
                 key={item.groups.id}
                 href={`/groups/${item.groups.id}`}

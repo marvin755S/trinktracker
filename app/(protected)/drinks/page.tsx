@@ -7,13 +7,13 @@ export default async function DrinksPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: categories }, { data: eventMemberships }, { data: drinks }] = await Promise.all([
+  const [{ data: categories }, { data: groupMemberships }, { data: drinks }] = await Promise.all([
     supabase
       .from("categories")
       .select("id, name")
       .or(`user_id.eq.${user!.id},user_id.is.null`)
       .order("name"),
-    supabase.from("event_members").select("event_id").eq("user_id", user!.id),
+    supabase.from("group_members").select("group_id").eq("user_id", user!.id),
     supabase
       .from("drinks")
       .select("id, amount, category_id, event_id, created_at")
@@ -22,9 +22,9 @@ export default async function DrinksPage() {
       .limit(20),
   ]);
 
-  const eventIds = eventMemberships?.map((membership) => membership.event_id) ?? [];
-  const { data: events } = eventIds.length
-    ? await supabase.from("events").select("id, name").in("id", eventIds).order("created_at")
+  const groupIds = groupMemberships?.map((m) => m.group_id) ?? [];
+  const { data: events } = groupIds.length
+    ? await supabase.from("events").select("id, name").in("group_id", groupIds).order("created_at")
     : { data: [] };
   const categoriesById = new Map(categories?.map((category) => [String(category.id), category.name]));
   const eventsById = new Map(events?.map((event) => [String(event.id), event.name]));

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import EventForm from "./event-form";
 import GroupActions from "@/components/GroupActions";
 import LeaderboardTable from "@/components/LeaderboardTable";
+import MemberList from "@/components/MemberList";
 /* eslint-disable @next/next/no-img-element */
 
 type GroupPageProps = {
@@ -26,7 +27,8 @@ export default async function GroupPage({ params }: GroupPageProps) {
     notFound();
   }
 
-  const memberIds = members?.map((member) => member.user_id) ?? [];
+  const uniqueMembers = members ? Array.from(new Map(members.map((m: any) => [m.user_id, m])).values()) : [];
+  const memberIds = uniqueMembers.map((member) => member.user_id) ?? [];
   const { data: profiles } = memberIds.length
     ? await supabase.from("profiles").select("id, name, avatar_path").in("id", memberIds)
     : { data: [] };
@@ -58,7 +60,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
   }
 
   const categoryMap = new Map(categories?.map((category) => [String(category.id), category.name]));
-  const leaderboard = (members ?? []).map((member) => {
+  const leaderboard = uniqueMembers.map((member) => {
     const counts: Record<string, number> = {};
     let total = 0;
     (drinks ?? []).forEach((drink) => {
@@ -80,7 +82,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
     id: String(categoryId),
     name: categoryMap.get(String(categoryId)) || "Unkategorisiert",
   }));
-  const currentMembership = members?.find((member) => member.user_id === user?.id);
+  const currentMembership = uniqueMembers.find((member) => member.user_id === user?.id);
 
   return (
     <main className="mx-auto max-w-4xl space-y-8 px-6 py-10">
@@ -122,19 +124,10 @@ export default async function GroupPage({ params }: GroupPageProps) {
       <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="text-xl font-semibold">Mitglieder</h2>
-          <span className="text-sm text-zinc-500">{members?.length ?? 0} Personen</span>
+          <span className="text-sm text-zinc-500">{uniqueMembers.length ?? 0} Personen</span>
         </div>
 
-        <ul className="mt-4 divide-y divide-zinc-100">
-          {members?.map((member) => (
-            <li key={member.user_id} className="flex items-center justify-between py-3">
-              <span>{namesById.get(member.user_id) || "Unbekanntes Mitglied"}</span>
-              <span className="text-sm text-zinc-500">
-                {member.role === "owner" ? "Owner" : "Mitglied"}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <MemberList members={uniqueMembers} namesById={namesById} groupId={String(id)} currentUserId={user?.id ?? null} isOwner={currentMembership?.role === "owner"} />
       </section>
 
       {/* Group actions: invite members, delete group (owner only) */}

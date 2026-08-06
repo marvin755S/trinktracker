@@ -9,6 +9,7 @@ export default function InvitationActions({ invitation, currentUser, currentUser
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [confirming, setConfirming] = useState<null | "revoke" | "decline">(null);
 
   const supabase = createClient();
 
@@ -21,7 +22,6 @@ export default function InvitationActions({ invitation, currentUser, currentUser
   }
 
   async function revoke() {
-    if (!confirm("Einladung wirklich zurückziehen?")) return;
     setLoading(true);
     try {
       const { error } = await supabase.from("invitations").delete().eq("id", invitation.id);
@@ -33,6 +33,7 @@ export default function InvitationActions({ invitation, currentUser, currentUser
       alert("Löschen fehlgeschlagen: " + (e.message || e));
     } finally {
       setLoading(false);
+      setConfirming(null);
     }
   }
 
@@ -60,7 +61,6 @@ export default function InvitationActions({ invitation, currentUser, currentUser
   }
 
   async function decline() {
-    if (!confirm("Einladung ablehnen?")) return;
     setLoading(true);
     try {
       const { error } = await supabase.from("invitations").delete().eq("id", invitation.id);
@@ -72,6 +72,7 @@ export default function InvitationActions({ invitation, currentUser, currentUser
       alert("Aktion fehlgeschlagen: " + (e.message || e));
     } finally {
       setLoading(false);
+      setConfirming(null);
     }
   }
 
@@ -85,13 +86,27 @@ export default function InvitationActions({ invitation, currentUser, currentUser
   return (
     <div className="flex items-center gap-2">
       {loading && <LoadingOverlay />}
-      {isSender && (
-        <button onClick={revoke} className="rounded px-3 py-1 bg-red-600 text-white text-sm">Zurückziehen</button>
+      {isSender && confirming === "revoke" && (
+        <div className="flex gap-2">
+          <button onClick={revoke} disabled={loading} className="rounded px-3 py-1 bg-red-600 text-white text-sm">Rückziehen bestätigen</button>
+          <button onClick={() => setConfirming(null)} disabled={loading} className="rounded px-3 py-1 border">Abbrechen</button>
+        </div>
+      )}
+      {isSender && confirming !== "revoke" && (
+        <button onClick={() => setConfirming("revoke")} className="rounded px-3 py-1 bg-red-600 text-white text-sm">Zurückziehen</button>
       )}
       {isRecipient && (
         <>
           <button onClick={accept} className="rounded px-3 py-1 bg-green-600 text-white text-sm">Annehmen</button>
-          <button onClick={decline} className="rounded px-3 py-1 bg-red-600 text-white text-sm">Ablehnen</button>
+          {confirming === "decline" && (
+            <div className="flex gap-2">
+              <button onClick={decline} disabled={loading} className="rounded px-3 py-1 bg-red-600 text-white text-sm">Ablehnen bestätigen</button>
+              <button onClick={() => setConfirming(null)} disabled={loading} className="rounded px-3 py-1 border">Abbrechen</button>
+            </div>
+          )}
+          {confirming !== "decline" && (
+            <button onClick={() => setConfirming("decline")} className="rounded px-3 py-1 bg-red-600 text-white text-sm">Ablehnen</button>
+          )}
         </>
       )}
     </div>

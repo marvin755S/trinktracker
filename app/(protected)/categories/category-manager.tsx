@@ -20,6 +20,7 @@ export default function CategoryManager({
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [targetCategoryId, setTargetCategoryId] = useState("");
   const [message, setMessage] = useState("");
+  const [confirmingDeleteWithDrinksId, setConfirmingDeleteWithDrinksId] = useState<number | null>(null);
 
   async function addCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,12 +55,12 @@ export default function CategoryManager({
     router.refresh();
   }
 
-  async function deleteWithDrinks(id: number, name: string) {
-    if (!window.confirm(`Kategorie „${name}“ und alle zugehörigen Getränke wirklich löschen?`)) return;
+  async function deleteWithDrinksConfirmed(id: number) {
     setMessage("");
     const result = await resolveCategoryDeletion({ id, mode: "delete_drinks" });
     if (result.error) return setMessage(result.error);
     setDeletingId(null);
+    setConfirmingDeleteWithDrinksId(null);
     setMessage("Kategorie und zugehörige Getränke gelöscht.");
     router.refresh();
   }
@@ -105,7 +106,14 @@ export default function CategoryManager({
                       {replacementCategories.filter((item) => item.id !== category.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                     </select>
                     <button className="rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white" type="button" onClick={() => moveAndDelete(category.id)}>Verschieben & löschen</button>
-                    <button className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-700" type="button" onClick={() => deleteWithDrinks(category.id, category.name)}>Getränke löschen</button>
+                    {confirmingDeleteWithDrinksId === category.id ? (
+                      <>
+                        <button className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-700" type="button" onClick={() => deleteWithDrinksConfirmed(category.id)}>Getränke löschen bestätigen</button>
+                        <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => setConfirmingDeleteWithDrinksId(null)}>Abbrechen</button>
+                      </>
+                    ) : (
+                      <button className="rounded-md border border-red-300 px-3 py-2 text-sm font-medium text-red-700" type="button" onClick={() => setConfirmingDeleteWithDrinksId(category.id)}>Getränke löschen</button>
+                    )}
                     <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => setDeletingId(null)}>Abbrechen</button>
                   </div>
                 </div>
