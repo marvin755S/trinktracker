@@ -5,6 +5,7 @@ import { updateAvatarPath, updateProfileName } from "@/lib/profile-actions";
 import { createClient } from "@/lib/supabase";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 export default function ProfileSettings({ initialName, email, userId, avatarUrl }: { initialName: string; email: string; userId: string; avatarUrl: string | null }) {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(avatarUrl);
   const [cropImage, setCropImage] = useState<HTMLImageElement | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -80,10 +82,15 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   async function saveName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
-    const result = await updateProfileName(name);
-    if (result.error) return setMessage(result.error);
-    setMessage("Name gespeichert.");
-    router.refresh();
+    setLoading(true);
+    try {
+      const result = await updateProfileName(name);
+      if (result.error) return setMessage(result.error);
+      setMessage("Name gespeichert.");
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function verifyCurrentPassword() {
@@ -99,25 +106,35 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   async function saveEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
-    const supabase = await verifyCurrentPassword();
-    if (!supabase) return;
-    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
-    if (error) return setMessage(error.message);
-    setCurrentPassword("");
-    setMessage("Bestätige die E-Mail-Änderung über die Nachricht in deinem Postfach.");
+    setLoading(true);
+    try {
+      const supabase = await verifyCurrentPassword();
+      if (!supabase) return;
+      const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+      if (error) return setMessage(error.message);
+      setCurrentPassword("");
+      setMessage("Bestätige die E-Mail-Änderung über die Nachricht in deinem Postfach.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function savePassword(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     if (newPassword.length < 8) return setMessage("Das neue Passwort muss mindestens 8 Zeichen haben.");
-    const supabase = await verifyCurrentPassword();
-    if (!supabase) return;
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) return setMessage(error.message);
-    setCurrentPassword("");
-    setNewPassword("");
-    setMessage("Passwort geändert.");
+    setLoading(true);
+    try {
+      const supabase = await verifyCurrentPassword();
+      if (!supabase) return;
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) return setMessage(error.message);
+      setCurrentPassword("");
+      setNewPassword("");
+      setMessage("Passwort geändert.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   function selectAvatar(event: ChangeEvent<HTMLInputElement>) {
@@ -167,29 +184,39 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
     );
     const blob = await new Promise<Blob | null>((resolve) => cropCanvas.current?.toBlob(resolve, "image/jpeg", 0.9));
     if (!blob) return setMessage("Der Bildausschnitt konnte nicht erstellt werden.");
-    const path = `${userId}/avatar`;
-    const supabase = createClient();
-    const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "3600" });
-    if (uploadError) return setMessage(uploadError.message);
+    setLoading(true);
+    try {
+      const path = `${userId}/avatar`;
+      const supabase = createClient();
+      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, { upsert: true, contentType: "image/jpeg", cacheControl: "3600" });
+      if (uploadError) return setMessage(uploadError.message);
 
-    const result = await updateAvatarPath(path);
-    if (result.error) return setMessage(result.error);
-    setAvatarPreview(cropCanvas.current.toDataURL("image/jpeg"));
-    setCropImage(null);
-    setMessage("Profilbild gespeichert.");
-    router.refresh();
+      const result = await updateAvatarPath(path);
+      if (result.error) return setMessage(result.error);
+      setAvatarPreview(cropCanvas.current.toDataURL("image/jpeg"));
+      setCropImage(null);
+      setMessage("Profilbild gespeichert.");
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function removeAvatar() {
     setMessage("");
-    const supabase = createClient();
-    const { error: removeError } = await supabase.storage.from("avatars").remove([`${userId}/avatar`]);
-    if (removeError) return setMessage(removeError.message);
-    const result = await updateAvatarPath(null);
-    if (result.error) return setMessage(result.error);
-    setAvatarPreview(null);
-    setMessage("Profilbild entfernt.");
-    router.refresh();
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const { error: removeError } = await supabase.storage.from("avatars").remove([`${userId}/avatar`]);
+      if (removeError) return setMessage(removeError.message);
+      const result = await updateAvatarPath(null);
+      if (result.error) return setMessage(result.error);
+      setAvatarPreview(null);
+      setMessage("Profilbild entfernt.");
+      router.refresh();
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -260,6 +287,7 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
       </section>
 
       {message && <p className="fixed bottom-20 left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-full bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white shadow-lg lg:bottom-6" role="status">{message}</p>}
+      {loading && <LoadingOverlay />}
     </div>
   );
 }

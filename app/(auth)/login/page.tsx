@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,28 +11,34 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function login() {
-    const supabase = createClient();
+    setMessage("");
+    setLoading(true);
+    try {
+      const supabase = createClient();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-    });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    console.log("LOGIN DATA:", data);
-    console.log("LOGIN ERROR:", error);
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
 
-    if (error) {
-    setMessage(error.message);
-    return;
+      router.push("/dashboard");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/dashboard");
   }
 
   return (
-    <main>
+    <>
+      {loading && <LoadingOverlay />}
+      <main>
       <h1>Login</h1>
 
       <input
@@ -47,11 +54,12 @@ export default function LoginPage() {
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      <button onClick={login}>
+      <button onClick={login} disabled={loading}>
         Einloggen
       </button>
 
       <p>{message}</p>
-    </main>
+      </main>
+    </>
   );
 }

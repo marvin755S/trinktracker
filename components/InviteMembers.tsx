@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
+import LoadingOverlay from "@/components/LoadingOverlay";
 import { useRouter } from "next/navigation";
 
 type ProfileResult = { id: string; name: string; email?: string };
@@ -70,6 +71,7 @@ export default function InviteMembers({ groupId }: { groupId: string }) {
 
   return (
     <div className="space-y-3">
+      {loading && <LoadingOverlay />}
       <div>
         <label className="block text-sm text-zinc-700">Mitglieder suchen</label>
         <div className="mt-2 flex items-center gap-2">
