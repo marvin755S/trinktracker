@@ -145,6 +145,20 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
 
   async function saveAvatar() {
     if (!cropCanvas.current || !cropImage) return setMessage("Bitte wähle zuerst ein Bild aus.");
+    const context = cropCanvas.current.getContext("2d");
+    if (!context) return setMessage("Der Bildausschnitt konnte nicht erstellt werden.");
+    context.clearRect(0, 0, cropCanvas.current.width, cropCanvas.current.height);
+    context.drawImage(
+      cropImage,
+      cropSourceX,
+      cropSourceY,
+      cropSourceSize,
+      cropSourceSize,
+      0,
+      0,
+      cropCanvas.current.width,
+      cropCanvas.current.height
+    );
     const blob = await new Promise<Blob | null>((resolve) => cropCanvas.current?.toBlob(resolve, "image/jpeg", 0.9));
     if (!blob) return setMessage("Der Bildausschnitt konnte nicht erstellt werden.");
     const path = `${userId}/avatar`;
