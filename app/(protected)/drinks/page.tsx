@@ -43,25 +43,23 @@ export default async function DrinksPage() {
 
       <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold">Zuletzt hinzugefügt</h2>
-        {drinks && drinks.length > 0 ? (
-          <ul className="mt-4 divide-y divide-zinc-100">
-            {drinks.map((drink) => (
-              <li key={drink.id} className="flex items-center justify-between gap-4 py-3">
-                <div>
-                  <p className="font-medium">{categoriesById.get(String(drink.category_id)) || "Kategorie"}</p>
-                  <p className="text-sm text-zinc-500">
-                    {drink.event_id ? eventsById.get(String(drink.event_id)) || "Event" : "Kein Event"}
-                  </p>
-                  <p className="mt-1 text-xs text-zinc-400">{new Date(drink.created_at).toLocaleString()}</p>
-                </div>
-                <strong>{drink.amount}</strong>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-3 text-zinc-600">Du hast noch keine Getränke hinzugefügt.</p>
-        )}
+        {/* Client-side list for immediate delete updates */}
+        {/* Attach category and event names to each drink for the client */}
+        {
+          /* Preprocess drinks to include resolved names */
+        }
+        <DrinkHistoryList
+          initial={
+            (drinks ?? []).map((d) => ({
+              ...d,
+              _categoryName: categoriesById.get(String(d.category_id)) ?? null,
+              _eventName: d.event_id ? eventsById.get(String(d.event_id)) ?? null : null,
+            }))
+          }
+        />
       </section>
     </main>
   );
 }
+
+import DrinkHistoryList from '@/components/DrinkHistoryList';

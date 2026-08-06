@@ -8,6 +8,7 @@ export default function InviteForm({ groups }: { groups: Array<{ id: string; nam
   const [email, setEmail] = useState("");
   const [groupId, setGroupId] = useState(groups?.[0]?.id ?? "");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const router = useRouter();
 
   async function sendInvite(e: React.FormEvent) {
@@ -22,9 +23,9 @@ export default function InviteForm({ groups }: { groups: Array<{ id: string; nam
       if (error) throw error;
       setEmail("");
       router.refresh();
-      alert("Einladung gesendet (wenn die Tabelle existiert).");
+      setMessage('Einladung gesendet.');
     } catch (err) {
-      alert("Einladung fehlgeschlagen. Stelle sicher, dass die Tabelle \"invitations\" in Supabase existiert.");
+      setMessage('Einladung fehlgeschlagen. Stelle sicher, dass die Tabelle "invitations" in Supabase existiert.');
     } finally {
       setLoading(false);
     }
@@ -49,6 +50,7 @@ export default function InviteForm({ groups }: { groups: Array<{ id: string; nam
       <button type="submit" disabled={loading} className="rounded bg-sky-600 px-3 py-2 text-white">
         {loading ? "Sende..." : "Einladung senden"}
       </button>
+      {message && <p className="mt-2 text-sm text-zinc-600">{message}</p>}
     </form>
   );
 }
