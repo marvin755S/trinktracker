@@ -34,6 +34,19 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
     context.drawImage(cropImage, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
   }, [cropImage, horizontal, vertical, zoom]);
 
+  useEffect(() => {
+    const editor = cropEditor.current;
+    if (!editor || !cropImage) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      setZoom((current) => Math.max(1, Math.min(3, current + (event.deltaY < 0 ? 0.1 : -0.1))));
+    };
+
+    editor.addEventListener("wheel", handleWheel, { passive: false });
+    return () => editor.removeEventListener("wheel", handleWheel);
+  }, [cropImage]);
+
   async function saveName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
@@ -149,7 +162,6 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
             onPointerMove={(event) => { if (isDraggingCrop) moveCrop(event.clientX, event.clientY); }}
             onPointerUp={() => setIsDraggingCrop(false)}
             onPointerLeave={() => setIsDraggingCrop(false)}
-            onWheel={(event) => { event.preventDefault(); setZoom((current) => Math.max(1, Math.min(3, current + (event.deltaY < 0 ? 0.1 : -0.1)))); }}
           >
             <img
               className="h-full w-full select-none object-cover"
