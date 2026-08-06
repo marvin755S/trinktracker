@@ -25,20 +25,28 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   const cropDiameter = Math.min(editorSize.width, editorSize.height) / zoom;
   const horizontalPadding = ((cropDiameter / 2) / editorSize.width) * 100;
   const verticalPadding = ((cropDiameter / 2) / editorSize.height) * 100;
+  const horizontalRange = 100 - horizontalPadding * 2;
+  const verticalRange = 100 - verticalPadding * 2;
+  const horizontalPosition = horizontalRange > 0 ? (horizontal - horizontalPadding) / horizontalRange : 0;
+  const verticalPosition = verticalRange > 0 ? (vertical - verticalPadding) / verticalRange : 0;
+  const cropSourceSize = cropImage ? Math.min(cropImage.naturalWidth, cropImage.naturalHeight) / zoom : 0;
+  const cropSourceX = cropImage ? (cropImage.naturalWidth - cropSourceSize) * horizontalPosition : 0;
+  const cropSourceY = cropImage ? (cropImage.naturalHeight - cropSourceSize) * verticalPosition : 0;
+  const displayScale = cropImage ? Math.min(editorSize.width, editorSize.height) / Math.min(cropImage.naturalWidth, cropImage.naturalHeight) : 1;
+  const imageOffsetX = (horizontal / 100) * editorSize.width - cropDiameter / 2 - zoom * displayScale * cropSourceX;
+  const imageOffsetY = (vertical / 100) * editorSize.height - cropDiameter / 2 - zoom * displayScale * cropSourceY;
 
   useEffect(() => {
     if (!cropImage || !cropCanvas.current) return;
     const canvas = cropCanvas.current;
     const context = canvas.getContext("2d");
     if (!context) return;
-    const cropSize = Math.min(cropImage.naturalWidth, cropImage.naturalHeight) / zoom;
-    const horizontalPosition = (horizontal - horizontalPadding) / (100 - horizontalPadding * 2);
-    const verticalPosition = (vertical - verticalPadding) / (100 - verticalPadding * 2);
-    const sourceX = (cropImage.naturalWidth - cropSize) * horizontalPosition;
-    const sourceY = (cropImage.naturalHeight - cropSize) * verticalPosition;
+    const cropSize = cropSourceSize;
+    const sourceX = cropSourceX;
+    const sourceY = cropSourceY;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.drawImage(cropImage, sourceX, sourceY, cropSize, cropSize, 0, 0, canvas.width, canvas.height);
-  }, [cropDiameter, cropImage, editorSize, horizontal, horizontalPadding, vertical, verticalPadding, zoom]);
+  }, [cropImage, cropSourceSize, cropSourceX, cropSourceY]);
 
   useEffect(() => {
     const editor = cropEditor.current;
@@ -189,6 +197,7 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
               src={cropImage.src}
               alt="Bild für den Profilausschnitt"
               draggable={false}
+              style={{ transform: `translate(${imageOffsetX}px, ${imageOffsetY}px) scale(${zoom})`, transformOrigin: "top left" }}
             />
             <div
               className="absolute cursor-grab rounded-full border-2 border-white shadow-[0_0_0_999px_rgba(0,0,0,0.55)] active:cursor-grabbing"
