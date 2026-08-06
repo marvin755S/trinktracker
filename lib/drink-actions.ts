@@ -10,7 +10,7 @@ function validName(name: string) {
   return trimmedName.length > 0 && trimmedName.length <= 80 ? trimmedName : null;
 }
 
-export async function createCategory(name: string, groupId: string): Promise<ActionResult> {
+export async function createCategory(name: string): Promise<ActionResult> {
   const categoryName = validName(name);
   if (!categoryName) return { error: "Bitte gib einen Kategorienamen ein." };
 
@@ -28,7 +28,7 @@ export async function createCategory(name: string, groupId: string): Promise<Act
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/groups/${groupId}`);
+  revalidatePath("/drinks");
   return {};
 }
 
@@ -36,12 +36,10 @@ export async function addDrink({
   amount,
   categoryId,
   eventId,
-  groupId,
 }: {
   amount: number;
   categoryId: number;
   eventId: number | null;
-  groupId: string;
 }): Promise<ActionResult> {
   if (!Number.isInteger(amount) || amount < 1) {
     return { error: "Die Anzahl muss mindestens 1 sein." };
@@ -71,7 +69,8 @@ export async function addDrink({
 
   if (error) return { error: error.message };
 
-  revalidatePath(`/groups/${groupId}`);
+  revalidatePath("/drinks");
+  revalidatePath("/groups/[id]", "page");
   return {};
 }
 

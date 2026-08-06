@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import DrinkForm from "./drink-form";
+import EventForm from "./event-form";
 
 type GroupPageProps = {
   params: Promise<{ id: string }>;
@@ -29,24 +29,12 @@ export default async function GroupPage({ params }: GroupPageProps) {
     : { data: [] };
   const namesById = new Map(profiles?.map((profile) => [profile.id, profile.name]));
 
-  const [{ data: categories }, { data: groupEvents }, { data: drinks }] = await Promise.all([
-    supabase.from("categories").select("id, name").eq("user_id", user!.id).order("name"),
+  const [{ data: groupEvents }, { data: drinks }] = await Promise.all([
     supabase.from("events").select("id, name").eq("group_id", id).order("created_at"),
     memberIds.length
       ? supabase.from("drinks").select("user_id, amount").in("user_id", memberIds)
       : Promise.resolve({ data: [] }),
   ]);
-
-  const eventIds = groupEvents?.map((event) => event.id) ?? [];
-  const { data: eventMemberships } = eventIds.length
-    ? await supabase
-        .from("event_members")
-        .select("event_id")
-        .eq("user_id", user!.id)
-        .in("event_id", eventIds)
-    : { data: [] };
-  const joinedEventIds = new Set(eventMemberships?.map((membership) => membership.event_id));
-  const events = groupEvents?.filter((event) => joinedEventIds.has(event.id)) ?? [];
 
   const totalsByUser = new Map<string, number>();
   drinks?.forEach((drink) => {
@@ -90,13 +78,6 @@ export default async function GroupPage({ params }: GroupPageProps) {
         </ul>
       </section>
 
-      <DrinkForm
-        categories={categories ?? []}
-        events={events}
-        groupId={id}
-        canCreateEvents={currentMembership?.role === "owner"}
-      />
-
       <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold">Leaderboard</h2>
         <p className="mt-1 text-sm text-zinc-600">Alle Getränke der Gruppenmitglieder.</p>
@@ -121,6 +102,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
             Noch keine Events. Als Owner kannst du oben eines anlegen.
           </p>
         )}
+        {currentMembership?.role === "owner" && <EventForm groupId={id} />}
       </section>
     </main>
   );

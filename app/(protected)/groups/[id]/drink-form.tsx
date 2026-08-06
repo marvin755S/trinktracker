@@ -1,6 +1,6 @@
 "use client";
 
-import { addDrink, createCategory, createEvent } from "@/lib/drink-actions";
+import { addDrink, createCategory } from "@/lib/drink-actions";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -10,20 +10,15 @@ type Event = { id: number; name: string };
 export default function DrinkForm({
   categories,
   events,
-  groupId,
-  canCreateEvents,
 }: {
   categories: Category[];
   events: Event[];
-  groupId: string;
-  canCreateEvents: boolean;
 }) {
   const router = useRouter();
   const [amount, setAmount] = useState("1");
   const [categoryId, setCategoryId] = useState("");
   const [eventId, setEventId] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [newEvent, setNewEvent] = useState("");
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -36,7 +31,6 @@ export default function DrinkForm({
       amount: Number(amount),
       categoryId: Number(categoryId),
       eventId: eventId ? Number(eventId) : null,
-      groupId,
     });
 
     setIsSaving(false);
@@ -51,20 +45,10 @@ export default function DrinkForm({
   async function submitCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
-    const result = await createCategory(newCategory, groupId);
+    const result = await createCategory(newCategory);
     if (result.error) return setMessage(result.error);
     setNewCategory("");
     setMessage("Kategorie erstellt.");
-    router.refresh();
-  }
-
-  async function submitEvent(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage("");
-    const result = await createEvent(newEvent, groupId);
-    if (result.error) return setMessage(result.error);
-    setNewEvent("");
-    setMessage("Event erstellt.");
     router.refresh();
   }
 
@@ -102,13 +86,6 @@ export default function DrinkForm({
         <input className="min-w-0 flex-1 rounded-md border border-zinc-300 px-3 py-2" placeholder="Neue Kategorie, z. B. Bier" value={newCategory} onChange={(event) => setNewCategory(event.target.value)} />
         <button className="rounded-md border border-zinc-300 px-4 py-2 font-medium" type="submit">Kategorie anlegen</button>
       </form>
-
-      {canCreateEvents && (
-        <form className="mt-3 flex gap-2" onSubmit={submitEvent}>
-          <input className="min-w-0 flex-1 rounded-md border border-zinc-300 px-3 py-2" placeholder="Neues Event, z. B. Sommerurlaub 2026" value={newEvent} onChange={(event) => setNewEvent(event.target.value)} />
-          <button className="rounded-md border border-zinc-300 px-4 py-2 font-medium" type="submit">Event anlegen</button>
-        </form>
-      )}
     </section>
   );
 }

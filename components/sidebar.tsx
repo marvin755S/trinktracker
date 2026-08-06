@@ -40,6 +40,7 @@ export default function Sidebar({
 
   const items: NavigationItem[] = [
     { href: "/dashboard", label: "Dashboard", active: pathname === "/dashboard" },
+    { href: "/drinks", label: "Getränke", active: pathname === "/drinks" },
     { href: "/profile", label: "Profil", active: pathname === "/profile" },
   ];
 
