@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase-server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import EventForm from "./event-form";
+/* eslint-disable @next/next/no-img-element */
 
 type GroupPageProps = {
   params: Promise<{ id: string }>;
@@ -25,9 +26,17 @@ export default async function GroupPage({ params }: GroupPageProps) {
 
   const memberIds = members?.map((member) => member.user_id) ?? [];
   const { data: profiles } = memberIds.length
-    ? await supabase.from("profiles").select("id, name").in("id", memberIds)
+    ? await supabase.from("profiles").select("id, name, avatar_path").in("id", memberIds)
     : { data: [] };
   const namesById = new Map(profiles?.map((profile) => [profile.id, profile.name]));
+  const avatarEntries = await Promise.all(
+    (profiles ?? []).map(async (profile) => {
+      if (!profile.avatar_path) return [profile.id, null] as const;
+      const { data } = await supabase.storage.from("avatars").createSignedUrl(profile.avatar_path, 60 * 60);
+      return [profile.id, data?.signedUrl || null] as const;
+    })
+  );
+  const avatarsById = new Map(avatarEntries);
 
   const [{ data: groupEvents }, { data: drinks }] = await Promise.all([
     supabase.from("events").select("id, name").eq("group_id", id).order("created_at"),
@@ -44,6 +53,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
     .map((member) => ({
       id: member.user_id,
       name: namesById.get(member.user_id) || "Unbekanntes Mitglied",
+      avatarUrl: avatarsById.get(member.user_id) || null,
       total: totalsByUser.get(member.user_id) ?? 0,
     }))
     .sort((left, right) => right.total - left.total);
@@ -84,7 +94,10 @@ export default async function GroupPage({ params }: GroupPageProps) {
         <ol className="mt-4 divide-y divide-zinc-100">
           {leaderboard.map((entry, index) => (
             <li key={entry.id} className="flex items-center justify-between py-3">
-              <span>{index + 1}. {entry.name}</span>
+              <span className="flex items-center gap-3">
+                {entry.avatarUrl ? <img className="h-9 w-9 rounded-full object-cover" src={entry.avatarUrl} alt="" /> : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-700">{entry.name.slice(0, 1).toUpperCase()}</span>}
+                <span>{index + 1}. {entry.name}</span>
+              </span>
               <strong>{entry.total}</strong>
             </li>
           ))}

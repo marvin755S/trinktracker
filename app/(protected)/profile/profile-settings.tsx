@@ -19,6 +19,8 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   const [horizontal, setHorizontal] = useState(50);
   const [vertical, setVertical] = useState(50);
   const cropCanvas = useRef<HTMLCanvasElement>(null);
+  const cropEditor = useRef<HTMLDivElement>(null);
+  const [isDraggingCrop, setIsDraggingCrop] = useState(false);
 
   useEffect(() => {
     if (!cropImage || !cropCanvas.current) return;
@@ -93,6 +95,13 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
     image.src = URL.createObjectURL(file);
   }
 
+  function moveCrop(clientX: number, clientY: number) {
+    const rect = cropEditor.current?.getBoundingClientRect();
+    if (!rect) return;
+    setHorizontal(Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100)));
+    setVertical(Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100)));
+  }
+
   async function saveAvatar() {
     if (!cropCanvas.current || !cropImage) return setMessage("Bitte wähle zuerst ein Bild aus.");
     const blob = await new Promise<Blob | null>((resolve) => cropCanvas.current?.toBlob(resolve, "image/jpeg", 0.9));
@@ -134,14 +143,31 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
           </div>
         </div>
         {cropImage && <div className="mt-5 rounded-lg bg-zinc-100 p-4">
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-            <canvas ref={cropCanvas} width="512" height="512" className="h-40 w-40 rounded-full" aria-label="Vorschau des Bildausschnitts" />
-            <div className="w-full space-y-3">
-              <label className="grid gap-1 text-sm font-medium">Zoom<input min="1" max="3" step="0.05" type="range" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /></label>
-              <label className="grid gap-1 text-sm font-medium">Horizontaler Ausschnitt<input min="0" max="100" type="range" value={horizontal} onChange={(event) => setHorizontal(Number(event.target.value))} /></label>
-              <label className="grid gap-1 text-sm font-medium">Vertikaler Ausschnitt<input min="0" max="100" type="range" value={vertical} onChange={(event) => setVertical(Number(event.target.value))} /></label>
-              <button className="rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white" type="button" onClick={saveAvatar}>Ausschnitt speichern</button>
-            </div>
+          <div
+            ref={cropEditor}
+            className="relative mx-auto h-72 w-72 touch-none overflow-hidden rounded-lg bg-zinc-900"
+            onPointerMove={(event) => { if (isDraggingCrop) moveCrop(event.clientX, event.clientY); }}
+            onPointerUp={() => setIsDraggingCrop(false)}
+            onPointerLeave={() => setIsDraggingCrop(false)}
+            onWheel={(event) => { event.preventDefault(); setZoom((current) => Math.max(1, Math.min(3, current + (event.deltaY < 0 ? 0.1 : -0.1)))); }}
+          >
+            <img
+              className="h-full w-full select-none object-cover"
+              src={cropImage.src}
+              alt="Bild für den Profilausschnitt"
+              draggable={false}
+              style={{ transform: `scale(${zoom})`, transformOrigin: `${horizontal}% ${vertical}%` }}
+            />
+            <div
+              className="absolute h-40 w-40 cursor-grab rounded-full border-2 border-white shadow-[0_0_0_999px_rgba(0,0,0,0.55)] active:cursor-grabbing"
+              style={{ left: `calc(${horizontal}% - 5rem)`, top: `calc(${vertical}% - 5rem)` }}
+              onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); setIsDraggingCrop(true); moveCrop(event.clientX, event.clientY); }}
+            />
+          </div>
+          <canvas ref={cropCanvas} width="512" height="512" className="hidden" />
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <p className="text-sm text-zinc-700">Kreis verschieben, mit dem Mausrad zoomen.</p>
+            <button className="shrink-0 rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white" type="button" onClick={saveAvatar}>Ausschnitt speichern</button>
           </div>
         </div>}
       </section>
