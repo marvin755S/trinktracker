@@ -38,7 +38,8 @@ export default async function Dashboard() {
         <p className="text-sm font-medium text-sky-600">Drink Tracker</p>
         <h1 className="text-3xl font-bold">Deine Gruppen</h1>
         <p className="mt-2 text-zinc-600">
-          Getränke werden immer einer Gruppe zugeordnet. Events sind optional.
+          Deine Getränke zählen in allen Gruppen, in denen du Mitglied bist.
+          Events sind optional.
         </p>
       </header>
 

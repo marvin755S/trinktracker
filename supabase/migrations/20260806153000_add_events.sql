@@ -1,5 +1,6 @@
 -- Events are optional group contexts (for example "Sommerurlaub 2026").
--- A drink always belongs to a group and may additionally belong to one event.
+-- Drinks belong to a person, never to a group. A group leaderboard aggregates
+-- all drinks from its members. A drink may additionally belong to one event.
 
 create table public.events (
   id uuid primary key default gen_random_uuid(),
@@ -14,7 +15,24 @@ create table public.event_members (
   primary key (event_id, user_id)
 );
 
+-- The application previously connected drinks directly to a group. Remove that
+-- link so a personal drink can be counted in every group the person belongs to.
+-- Existing drink RLS policies depend on group_id, so they are replaced below.
+do $$
+declare
+  policy_name text;
+begin
+  for policy_name in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'drinks'
+  loop
+    execute format('drop policy if exists %I on public.drinks', policy_name);
+  end loop;
+end;
+$$;
+
 alter table public.drinks
+  drop column group_id,
   add column event_id uuid references public.events(id) on delete set null;
 
 -- An event membership is only valid if the person is already a group member.
@@ -41,7 +59,7 @@ create trigger event_member_must_belong_to_group
 before insert or update on public.event_members
 for each row execute function public.validate_event_member();
 
--- Prevent linking a drink to an event from another group.
+-- Only event members may attach one of their drinks to that event.
 create or replace function public.validate_drink_event()
 returns trigger
 language plpgsql
@@ -50,18 +68,37 @@ set search_path = public
 as $$
 begin
   if new.event_id is not null and not exists (
-    select 1 from public.events e
-    where e.id = new.event_id and e.group_id = new.group_id
+    select 1 from public.event_members em
+    where em.event_id = new.event_id and em.user_id = new.user_id
   ) then
-    raise exception 'The event must belong to the same group as the drink';
+    raise exception 'The drink owner must be a member of the event';
   end if;
   return new;
 end;
 $$;
 
-create trigger drink_event_must_belong_to_group
+create trigger drink_event_must_have_event_member
 before insert or update on public.drinks
 for each row execute function public.validate_drink_event();
+
+alter table public.drinks enable row level security;
+
+create policy "Users can view their own drinks"
+on public.drinks for select to authenticated
+using (user_id = auth.uid());
+
+create policy "Users can add their own drinks"
+on public.drinks for insert to authenticated
+with check (user_id = auth.uid());
+
+create policy "Users can update their own drinks"
+on public.drinks for update to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+create policy "Users can delete their own drinks"
+on public.drinks for delete to authenticated
+using (user_id = auth.uid());
 
 -- RLS: members may view the other members of their group, which enables the
 -- member count and member names in the group view.

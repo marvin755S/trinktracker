@@ -58,7 +58,8 @@ export default async function GroupPage({ params }: GroupPageProps) {
         <h2 className="text-xl font-semibold">Events</h2>
         <p className="mt-2 text-zinc-600">
           Hier erscheinen später Events wie „Sommerurlaub 2026“. Getränke ohne
-          Event bleiben trotzdem Teil dieser Gruppe und des Leaderboards.
+          Event bleiben trotzdem Teil deiner persönlichen Statistik und des
+          Gruppen-Leaderboards.
         </p>
       </section>
     </main>
