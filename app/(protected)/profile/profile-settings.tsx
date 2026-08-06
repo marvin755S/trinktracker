@@ -59,6 +59,12 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
   }, [cropImage]);
 
   useEffect(() => {
+    if (!message) return;
+    const timeout = window.setTimeout(() => setMessage(""), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [message]);
+
+  useEffect(() => {
     const editor = cropEditor.current;
     if (!editor || !cropImage) return;
 
@@ -253,7 +259,7 @@ export default function ProfileSettings({ initialName, email, userId, avatarUrl 
         </form>
       </section>
 
-      {message && <p className="text-sm text-zinc-700" role="status">{message}</p>}
+      {message && <p className="fixed bottom-20 left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-full bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white shadow-lg lg:bottom-6" role="status">{message}</p>}
     </div>
   );
 }
