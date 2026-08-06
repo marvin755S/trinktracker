@@ -28,51 +28,58 @@ body {
   justify-content: center;
   align-items: center;
 
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .loading-card {
   display: flex;
-  gap: 0.6rem;
-
-  padding: 1rem 1.4rem;
-
-  border-radius: 9999px;
-
-  background: rgba(255, 255, 255, 0.9);
-
-  box-shadow:
-    0 10px 30px rgba(0,0,0,0.08);
+  gap: 0.75rem;
+  align-items: center;
+  background: transparent;
+  box-shadow: none;
 }
 
 @keyframes loading-dot-pulse {
-
   0%,
   100% {
-    transform: scale(0.75);
+    transform: scale(0.9);
     opacity: 0.35;
-    background: #7dd3fc;
+    background: #38bdf8;
   }
 
   50% {
-    transform: scale(1.15);
+    transform: scale(1.4);
     opacity: 1;
-    background: #0284c7;
+    background: #0ea5e9;
   }
-
 }
 
 .loading-dot {
-  width: 0.7rem;
-  height: 0.7rem;
+  width: 0.8rem;
+  height: 0.8rem;
 
   border-radius: 9999px;
 
-  animation: loading-dot-pulse .9s ease-in-out infinite;
+  background: #38bdf8;
+  opacity: 0.35;
 
-  will-change: transform, opacity;
+  animation: loading-dot-pulse .9s ease-in-out infinite both;
+
+  will-change: transform, opacity, background;
+}
+
+.loading-dot:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 150ms;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 300ms;
 }
 
 /* Increase contrast in the default light mode. */

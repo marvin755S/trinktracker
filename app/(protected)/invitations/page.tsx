@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
-import InvitationActions from "@/components/InvitationActions";
+import InvitationItem from "@/components/InvitationItem";
 
 // InviteForm moved to group actions; this page shows incoming and outgoing invitations
 
@@ -80,17 +80,13 @@ export default async function InvitationsPage() {
           {invitationsError && <li className="text-sm text-red-600">Fehler beim Laden der Einladungen.</li>}
           {!invitationsError && incoming.length === 0 && <li className="text-sm text-zinc-500">Keine eingehenden Einladungen</li>}
           {incoming.map((inv) => (
-            <li key={inv.id} className="flex items-center justify-between py-2">
-              <div>
-                <div className="text-sm font-medium">Von: {inv.inviter_name || inv.invited_email || inv.created_by}</div>
-                <div className="text-xs text-zinc-500">Gruppe: {inv.group_name || `Gruppe ${inv.group_id}`} • Status: {inv.status}</div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-zinc-500">{new Date(inv.created_at).toLocaleString()}</div>
-                {/* @ts-ignore Server -> Client */}
-                <InvitationActions invitation={inv} currentUser={user.id} currentUserEmail={user.email} />
-              </div>
-            </li>
+            <InvitationItem
+              key={inv.id}
+              invitation={inv}
+              currentUser={user.id}
+              currentUserEmail={user.email}
+              type="incoming"
+            />
           ))}
         </ul>
       </section>
@@ -119,17 +115,13 @@ CREATE TABLE public.invitations (
           <ul className="mt-3 space-y-2">
             {outgoing.length === 0 && <li className="text-sm text-zinc-500">Keine gesendeten Einladungen</li>}
             {outgoing.map((inv) => (
-              <li key={inv.id} className="flex items-center justify-between py-2">
-                <div>
-                  <div className="text-sm font-medium">{inv.invited_name || inv.invited_email || "(kein Empfänger)"}</div>
-                  <div className="text-xs text-zinc-500">Gruppe: {inv.group_name} • Status: {inv.status}</div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-sm text-zinc-500">{new Date(inv.created_at).toLocaleString()}</div>
-                  {/* @ts-ignore Server -> Client */}
-                  <InvitationActions invitation={inv} currentUser={user.id} currentUserEmail={user.email} />
-                </div>
-              </li>
+              <InvitationItem
+                key={inv.id}
+                invitation={inv}
+                currentUser={user.id}
+                currentUserEmail={user.email}
+                type="outgoing"
+              />
             ))}
           </ul>
         )}

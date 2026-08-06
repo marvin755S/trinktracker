@@ -26,8 +26,8 @@ export default async function DrinksPage() {
   const { data: events } = eventIds.length
     ? await supabase.from("events").select("id, name").in("id", eventIds).order("created_at")
     : { data: [] };
-  const categoriesById = new Map(categories?.map((category) => [category.id, category.name]));
-  const eventsById = new Map(events?.map((event) => [event.id, event.name]));
+  const categoriesById = new Map(categories?.map((category) => [String(category.id), category.name]));
+  const eventsById = new Map(events?.map((event) => [String(event.id), event.name]));
 
   return (
     <main className="mx-auto max-w-4xl space-y-8 px-6 py-10 pb-24 lg:py-12">
@@ -48,10 +48,11 @@ export default async function DrinksPage() {
             {drinks.map((drink) => (
               <li key={drink.id} className="flex items-center justify-between gap-4 py-3">
                 <div>
-                  <p className="font-medium">{categoriesById.get(drink.category_id) || "Kategorie"}</p>
+                  <p className="font-medium">{categoriesById.get(String(drink.category_id)) || "Kategorie"}</p>
                   <p className="text-sm text-zinc-500">
-                    {drink.event_id ? eventsById.get(drink.event_id) || "Event" : "Kein Event"}
+                    {drink.event_id ? eventsById.get(String(drink.event_id)) || "Event" : "Kein Event"}
                   </p>
+                  <p className="mt-1 text-xs text-zinc-400">{new Date(drink.created_at).toLocaleString()}</p>
                 </div>
                 <strong>{drink.amount}</strong>
               </li>

@@ -85,7 +85,7 @@ export default function LeaderboardTable({
           {sortedRows.map((row, index) => (
             <tr key={row.id} className="border-t border-zinc-100 hover:bg-zinc-50">
               <td className="whitespace-nowrap px-3 py-2 text-zinc-600">{index + 1}</td>
-              <td className="flex gap-3 whitespace-nowrap px-3 py-2">
+              <td className="flex items-center gap-3 whitespace-nowrap px-3 py-2">
                 {row.avatarUrl ? (
                   <img src={row.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
                 ) : (
@@ -96,7 +96,7 @@ export default function LeaderboardTable({
               {columns.map((column) => (
                 <td key={column.id} className="whitespace-nowrap px-3 py-2 text-right text-zinc-700">{row.counts[column.id] ?? 0}</td>
               ))}
-              <td className="whitespace-nowrap px-3 py-2 text-right font-semibold text-zinc-900">{row.total}</td>
+              <td className="whitespace-nowrap px-3 py-2 text-right font-semibold text-zinc-700">{row.total}</td>
             </tr>
           ))}
         </tbody>

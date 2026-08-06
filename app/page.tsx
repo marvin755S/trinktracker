@@ -1,29 +1,16 @@
-import { createClient } from "@/lib/supabase";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase-server";
 
 export default async function Home() {
-  const supabase = createClient();
-  const { data: categories, error } = await supabase
-    .from("categories")
-    .select("*")
-    .order("id");
+  const supabase = await createClient();
 
-  return (
-    <main>
-      <h1>🍻 Trinktracker</h1>
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-      {error && (
-        <p>Fehler: {error.message}</p>
-      )}
+  if (user) {
+    redirect("/dashboard");
+  }
 
-      <h2>Kategorien</h2>
-
-      <ul>
-        {categories?.map((category) => (
-          <li key={category.id}>
-            {category.name}
-          </li>
-        ))}
-      </ul>
-    </main>
-  );
+  redirect("/login");
 }

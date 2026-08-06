@@ -5,11 +5,20 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
-export default function InvitationActions({ invitation, currentUser, currentUserEmail }: { invitation: any; currentUser: any; currentUserEmail?: string | null }) {
+export default function InvitationActions({ invitation, currentUser, currentUserEmail, onDone }: { invitation: any; currentUser: any; currentUserEmail?: string | null; onDone?: () => void }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
 
   const supabase = createClient();
+
+  function isSameEmail() {
+    return (
+      invitation.invited_email &&
+      currentUserEmail &&
+      invitation.invited_email.toLowerCase() === currentUserEmail.toLowerCase()
+    );
+  }
 
   async function revoke() {
     if (!confirm("Einladung wirklich zurückziehen?")) return;
@@ -17,6 +26,8 @@ export default function InvitationActions({ invitation, currentUser, currentUser
     try {
       const { error } = await supabase.from("invitations").delete().eq("id", invitation.id);
       if (error) throw error;
+      setDone(true);
+      onDone?.();
       router.refresh();
     } catch (e: any) {
       alert("Löschen fehlgeschlagen: " + (e.message || e));
@@ -38,6 +49,8 @@ export default function InvitationActions({ invitation, currentUser, currentUser
       const { error } = await supabase.from("invitations").delete().eq("id", invitation.id);
       if (error) throw error;
 
+      setDone(true);
+      onDone?.();
       router.refresh();
     } catch (e: any) {
       alert("Aktion fehlgeschlagen: " + (e.message || e));
@@ -52,6 +65,8 @@ export default function InvitationActions({ invitation, currentUser, currentUser
     try {
       const { error } = await supabase.from("invitations").delete().eq("id", invitation.id);
       if (error) throw error;
+      setDone(true);
+      onDone?.();
       router.refresh();
     } catch (e: any) {
       alert("Aktion fehlgeschlagen: " + (e.message || e));
@@ -60,8 +75,12 @@ export default function InvitationActions({ invitation, currentUser, currentUser
     }
   }
 
+  if (done) {
+    return null;
+  }
+
   const isSender = invitation.created_by === currentUser;
-  const isRecipient = invitation.invited_user_id === currentUser || (invitation.invited_email && currentUserEmail && invitation.invited_email === currentUserEmail);
+  const isRecipient = invitation.invited_user_id === currentUser || isSameEmail();
 
   return (
     <div className="flex items-center gap-2">

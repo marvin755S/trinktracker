@@ -40,21 +40,24 @@ export default async function GroupPage({ params }: GroupPageProps) {
   );
   const avatarsById = new Map(avatarEntries);
 
-  const [{ data: groupEvents }, { data: drinks }, { data: categories }] = await Promise.all([
+  const [{ data: groupEvents }, { data: drinks }] = await Promise.all([
     supabase.from("events").select("id, name").eq("group_id", id).order("created_at"),
     memberIds.length
       ? supabase.from("drinks").select("user_id, amount, category_id").in("user_id", memberIds)
       : Promise.resolve({ data: [] }),
-    supabase
-      .from("categories")
-      .select("id, name")
-      .in("user_id", memberIds)
-      .or("user_id.is.null")
-      .order("name"),
   ]);
 
+  const uncategorizedExists = (drinks ?? []).some((drink) => !drink.category_id);
   const categoryIds = Array.from(new Set((drinks ?? []).map((drink) => drink.category_id).filter(Boolean)));
-  const categoryMap = new Map(categories?.map((category) => [category.id, category.name]));
+  const { data: categories } = categoryIds.length
+    ? await supabase.from("categories").select("id, name").in("id", categoryIds)
+    : { data: [] };
+
+  if (uncategorizedExists) {
+    categoryIds.push("uncategorized");
+  }
+
+  const categoryMap = new Map(categories?.map((category) => [String(category.id), category.name]));
   const leaderboard = (members ?? []).map((member) => {
     const counts: Record<string, number> = {};
     let total = 0;
@@ -75,7 +78,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
 
   const categoryColumns = categoryIds.map((categoryId) => ({
     id: String(categoryId),
-    name: categoryMap.get(Number(categoryId)) || "Unkategorisiert",
+    name: categoryMap.get(String(categoryId)) || "Unkategorisiert",
   }));
   const currentMembership = members?.find((member) => member.user_id === user?.id);
 

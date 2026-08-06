@@ -37,12 +37,17 @@ export default async function EventPage({ params }: EventPageProps) {
   const { data: drinks } = memberIds.length
     ? await supabase.from("drinks").select("user_id, amount, category_id").eq("event_id", eventId)
     : { data: [] };
-  const categoryIds = Array.from(new Set((drinks ?? []).map((drink) => drink.category_id).filter(Boolean)));
 
+  const uncategorizedExists = (drinks ?? []).some((drink) => !drink.category_id);
+  const categoryIds = Array.from(new Set((drinks ?? []).map((drink) => drink.category_id).filter(Boolean)));
   const { data: categories } = categoryIds.length
     ? await supabase.from("categories").select("id, name").in("id", categoryIds)
     : { data: [] };
-  const categoryMap = new Map(categories?.map((category) => [category.id, category.name]));
+
+  if (uncategorizedExists) {
+    categoryIds.push("uncategorized");
+  }
+  const categoryMap = new Map(categories?.map((category) => [String(category.id), category.name]));
 
   const leaderboard = (members ?? []).map((member) => {
     const counts: Record<string, number> = {};
@@ -50,7 +55,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
     (drinks ?? []).forEach((drink) => {
       if (drink.user_id !== member.user_id) return;
-      const categoryId = String(drink.category_id ?? "uncategorized");
+      const categoryId = drink.category_id ? String(drink.category_id) : "uncategorized";
       counts[categoryId] = (counts[categoryId] ?? 0) + drink.amount;
       total += drink.amount;
     });
@@ -66,7 +71,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
   const categoryColumns = categoryIds.map((categoryId) => ({
     id: String(categoryId),
-    name: categoryMap.get(Number(categoryId)) || "Unkategorisiert",
+    name: categoryMap.get(String(categoryId)) || "Unkategorisiert",
   }));
 
   return (
