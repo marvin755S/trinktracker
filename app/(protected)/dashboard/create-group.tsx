@@ -5,9 +5,9 @@ import { useState } from "react";
 
 
 export default function CreateGroup() {
-
+  
   const [name, setName] = useState("");
-
+  
 
   async function submit() {
 
