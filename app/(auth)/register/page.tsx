@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase";
 import LoadingOverlay from "@/components/LoadingOverlay";
 
@@ -56,30 +57,42 @@ export default function RegisterPage() {
   return (
     <>
       {loading && <LoadingOverlay />}
-      <main>
-      <h1>Registrieren</h1>
+      <main className="mx-auto max-w-md px-6 py-12">
+        <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
+          <h1 className="text-2xl font-bold">Registrieren</h1>
+          <p className="mt-2 text-sm text-zinc-600">Erstelle ein neues Konto.</p>
 
-      <input
-        placeholder="Name"
-        onChange={(e) => setName(e.target.value)}
-      />
+          <div className="mt-6 space-y-4">
+            <input
+              className="w-full rounded-md border border-zinc-200 px-3 py-2"
+              placeholder="Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
 
-      <input
-        placeholder="E-Mail"
-        onChange={(e) => setEmail(e.target.value)}
-      />
+            <input
+              className="w-full rounded-md border border-zinc-200 px-3 py-2"
+              placeholder="E-Mail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
 
-      <input
-        placeholder="Passwort"
-        type="password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
+            <input
+              className="w-full rounded-md border border-zinc-200 px-3 py-2"
+              placeholder="Passwort"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
-      <button onClick={register} disabled={loading}>
-        Registrieren
-      </button>
+            <div className="flex items-center justify-between gap-4">
+              <button onClick={register} disabled={loading} className="rounded bg-sky-600 px-4 py-2 text-white">Registrieren</button>
+              <Link href="/login" className="text-sm text-sky-600 hover:underline">Bereits ein Konto? Einloggen</Link>
+            </div>
 
-      <p>{message}</p>
+            {message && <p className="text-sm text-zinc-700">{message}</p>}
+          </div>
+        </div>
       </main>
     </>
   );

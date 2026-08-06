@@ -159,6 +159,33 @@ export default function Sidebar({
       >
         {theme === "light" ? "Dunkelmodus" : "Hellmodus"}
       </button>
+      <LogoutButton />
     </aside>
+  );
+}
+
+function LogoutButton() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const supabase = createClient();
+
+  async function logout() {
+    setLoading(true);
+    try {
+      await supabase.auth.signOut();
+      router.push('/login');
+    } catch (e) {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 lg:mt-6">
+      <button onClick={logout} disabled={loading} className="w-full rounded-lg bg-zinc-100 px-3 py-2 text-sm font-medium hover:bg-zinc-200">
+        {loading ? 'Ausloggen...' : 'Ausloggen'}
+      </button>
+    </div>
   );
 }
