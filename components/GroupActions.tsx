@@ -16,9 +16,18 @@ export default function GroupActions({ groupId, isOwner }: { groupId: string; is
     setLoading(true);
     try {
       const supabase = createClient();
-      await supabase.from("groups").delete().eq("id", parseInt(groupId));
+      console.debug("deleteGroup: deleting group", { groupId });
+      const { data, error } = await supabase.from("groups").delete().eq("id", parseInt(groupId));
+      console.debug("deleteGroup: result", { data, error });
+      if (error) {
+        alert("Löschen fehlgeschlagen: " + error.message);
+        return;
+      }
+
+      // Erfolg -> zurück zum Dashboard
       await router.push("/dashboard");
     } catch (e) {
+      console.error("deleteGroup: unexpected error", e);
       alert("Löschen fehlgeschlagen");
     } finally {
       setLoading(false);
