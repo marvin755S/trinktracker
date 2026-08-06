@@ -113,7 +113,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
           </ul>
         ) : (
           <p className="mt-2 text-zinc-600">
-            Noch keine Events. Als Owner kannst du oben eines anlegen.
+            Noch keine Events. Als Owner kannst du hier eines anlegen.
           </p>
         )}
         {currentMembership?.role === "owner" && <EventForm groupId={id} />}
