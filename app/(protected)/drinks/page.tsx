@@ -8,7 +8,11 @@ export default async function DrinksPage() {
   } = await supabase.auth.getUser();
 
   const [{ data: categories }, { data: eventMemberships }, { data: drinks }] = await Promise.all([
-    supabase.from("categories").select("id, name").eq("user_id", user!.id).order("name"),
+    supabase
+      .from("categories")
+      .select("id, name")
+      .or(`user_id.eq.${user!.id},user_id.is.null`)
+      .order("name"),
     supabase.from("event_members").select("event_id").eq("user_id", user!.id),
     supabase
       .from("drinks")
