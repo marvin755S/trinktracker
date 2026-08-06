@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import EventForm from "./event-form";
 import GroupActions from "@/components/GroupActions";
+import LeaderboardTable from "@/components/LeaderboardTable";
 /* eslint-disable @next/next/no-img-element */
 
 type GroupPageProps = {
@@ -39,25 +40,43 @@ export default async function GroupPage({ params }: GroupPageProps) {
   );
   const avatarsById = new Map(avatarEntries);
 
-  const [{ data: groupEvents }, { data: drinks }] = await Promise.all([
+  const [{ data: groupEvents }, { data: drinks }, { data: categories }] = await Promise.all([
     supabase.from("events").select("id, name").eq("group_id", id).order("created_at"),
     memberIds.length
-      ? supabase.from("drinks").select("user_id, amount").in("user_id", memberIds)
+      ? supabase.from("drinks").select("user_id, amount, category_id").in("user_id", memberIds)
       : Promise.resolve({ data: [] }),
+    supabase
+      .from("categories")
+      .select("id, name")
+      .in("user_id", memberIds)
+      .or("user_id.is.null")
+      .order("name"),
   ]);
 
-  const totalsByUser = new Map<string, number>();
-  drinks?.forEach((drink) => {
-    totalsByUser.set(drink.user_id, (totalsByUser.get(drink.user_id) ?? 0) + drink.amount);
-  });
-  const leaderboard = (members ?? [])
-    .map((member) => ({
+  const categoryIds = Array.from(new Set((drinks ?? []).map((drink) => drink.category_id).filter(Boolean)));
+  const categoryMap = new Map(categories?.map((category) => [category.id, category.name]));
+  const leaderboard = (members ?? []).map((member) => {
+    const counts: Record<string, number> = {};
+    let total = 0;
+    (drinks ?? []).forEach((drink) => {
+      if (drink.user_id !== member.user_id) return;
+      const categoryId = String(drink.category_id ?? "uncategorized");
+      counts[categoryId] = (counts[categoryId] ?? 0) + drink.amount;
+      total += drink.amount;
+    });
+    return {
       id: member.user_id,
       name: namesById.get(member.user_id) || "Unbekanntes Mitglied",
       avatarUrl: avatarsById.get(member.user_id) || null,
-      total: totalsByUser.get(member.user_id) ?? 0,
-    }))
-    .sort((left, right) => right.total - left.total);
+      counts,
+      total,
+    };
+  });
+
+  const categoryColumns = categoryIds.map((categoryId) => ({
+    id: String(categoryId),
+    name: categoryMap.get(Number(categoryId)) || "Unkategorisiert",
+  }));
   const currentMembership = members?.find((member) => member.user_id === user?.id);
 
   return (
@@ -74,24 +93,20 @@ export default async function GroupPage({ params }: GroupPageProps) {
       <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold">Leaderboard</h2>
         <p className="mt-1 text-sm text-zinc-600">Alle Getränke der Gruppenmitglieder.</p>
-        <ol className="mt-4 divide-y divide-zinc-100">
-          {leaderboard.map((entry, index) => (
-            <li key={entry.id} className="flex items-center justify-between py-3">
-              <span className="flex items-center gap-3">
-                {entry.avatarUrl ? <img className="h-9 w-9 rounded-full object-cover" src={entry.avatarUrl} alt="" /> : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-700">{entry.name.slice(0, 1).toUpperCase()}</span>}
-                <span>{index + 1}. {entry.name}</span>
-              </span>
-              <strong>{entry.total}</strong>
-            </li>
-          ))}
-        </ol>
+        <LeaderboardTable columns={categoryColumns} rows={leaderboard} />
       </section>
 
       <section className="rounded-xl border border-dashed border-zinc-300 p-6">
         <h2 className="text-xl font-semibold">Events</h2>
         {groupEvents && groupEvents.length > 0 ? (
           <ul className="mt-3 space-y-2">
-            {groupEvents.map((event) => <li key={event.id}>{event.name}</li>)}
+            {groupEvents.map((event) => (
+              <li key={event.id}>
+                <Link href={`/groups/${id}/events/${event.id}`} className="text-sky-600 hover:underline">
+                  {event.name}
+                </Link>
+              </li>
+            ))}
           </ul>
         ) : (
           <p className="mt-2 text-zinc-600">
