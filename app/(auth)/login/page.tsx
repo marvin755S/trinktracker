@@ -19,19 +19,27 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
 
+      console.debug("login: calling signInWithPassword", { email });
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      console.debug("login: signInWithPassword result", { data, error });
 
       if (error) {
         setMessage(error.message);
         return;
       }
 
-      router.push("/dashboard");
+      console.debug("login: navigating to /dashboard");
+      await router.push("/dashboard");
+      console.debug("login: navigation complete");
+    } catch (err) {
+      console.error("login: unexpected error", err);
+      setMessage((err as any)?.message ?? "Login fehlgeschlagen");
     } finally {
       setLoading(false);
+      console.debug("login: loading=false");
     }
   }
 

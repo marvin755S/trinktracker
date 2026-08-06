@@ -71,30 +71,6 @@ export default async function GroupPage({ params }: GroupPageProps) {
         <h1 className="text-3xl font-bold">{group.name}</h1>
       </header>
 
-      {/* Group actions: invite members, delete group (owner only) */}
-      {/* @ts-ignore Server -> Client */}
-      <div>
-        <GroupActions groupId={String(id)} isOwner={currentMembership?.role === "owner"} />
-      </div>
-
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-xl font-semibold">Mitglieder</h2>
-          <span className="text-sm text-zinc-500">{members?.length ?? 0} Personen</span>
-        </div>
-
-        <ul className="mt-4 divide-y divide-zinc-100">
-          {members?.map((member) => (
-            <li key={member.user_id} className="flex items-center justify-between py-3">
-              <span>{namesById.get(member.user_id) || "Unbekanntes Mitglied"}</span>
-              <span className="text-sm text-zinc-500">
-                {member.role === "owner" ? "Owner" : "Mitglied"}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold">Leaderboard</h2>
         <p className="mt-1 text-sm text-zinc-600">Alle Getränke der Gruppenmitglieder.</p>
@@ -124,6 +100,30 @@ export default async function GroupPage({ params }: GroupPageProps) {
         )}
         {currentMembership?.role === "owner" && <EventForm groupId={id} />}
       </section>
+
+      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="text-xl font-semibold">Mitglieder</h2>
+          <span className="text-sm text-zinc-500">{members?.length ?? 0} Personen</span>
+        </div>
+
+        <ul className="mt-4 divide-y divide-zinc-100">
+          {members?.map((member) => (
+            <li key={member.user_id} className="flex items-center justify-between py-3">
+              <span>{namesById.get(member.user_id) || "Unbekanntes Mitglied"}</span>
+              <span className="text-sm text-zinc-500">
+                {member.role === "owner" ? "Owner" : "Mitglied"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Group actions: invite members, delete group (owner only) */}
+      {/* @ts-ignore Server -> Client */}
+      <div>
+        <GroupActions groupId={String(id)} isOwner={currentMembership?.role === "owner"} />
+      </div>
     </main>
   );
 }
