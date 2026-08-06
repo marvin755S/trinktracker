@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
+import ProfileSettings from "./profile-settings";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -11,9 +12,13 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("name, approved, is_admin")
+    .select("name, approved, is_admin, avatar_path")
     .eq("id", user.id)
     .single();
+
+  const { data: avatar } = profile?.avatar_path
+    ? await supabase.storage.from("avatars").createSignedUrl(profile.avatar_path, 60 * 60)
+    : { data: null };
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10 pb-24 lg:py-12">
@@ -23,10 +28,6 @@ export default async function ProfilePage() {
       </header>
 
       <dl className="mt-8 divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white px-6 shadow-sm">
-        <div className="py-4">
-          <dt className="text-sm text-zinc-500">Name</dt>
-          <dd className="mt-1 font-medium">{profile?.name || "Nicht angegeben"}</dd>
-        </div>
         <div className="py-4">
           <dt className="text-sm text-zinc-500">E-Mail</dt>
           <dd className="mt-1 font-medium">{user.email || "Nicht verfügbar"}</dd>
@@ -42,6 +43,13 @@ export default async function ProfilePage() {
           </div>
         )}
       </dl>
+
+      <ProfileSettings
+        initialName={profile?.name || ""}
+        email={user.email || ""}
+        userId={user.id}
+        avatarUrl={avatar?.signedUrl || null}
+      />
     </main>
   );
 }
