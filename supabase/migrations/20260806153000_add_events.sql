@@ -102,7 +102,7 @@ using (user_id = auth.uid());
 
 -- RLS: members may view the other members of their group, which enables the
 -- member count and member names in the group view.
-create or replace function public.is_group_member(target_group_id bigint)
+create or replace function public.is_group_member(group_id bigint)
 returns boolean
 language sql
 security definer
@@ -110,8 +110,8 @@ set search_path = public
 stable
 as $$
   select exists (
-    select 1 from public.group_members
-    where group_id = target_group_id and user_id = auth.uid()
+    select 1 from public.group_members gm
+    where gm.group_id = $1 and gm.user_id = auth.uid()
   );
 $$;
 
