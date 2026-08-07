@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { useToast } from "@/components/Toast";
 
 export default function InvitationActions({ invitation, currentUser, currentUserEmail, onDone }: { invitation: any; currentUser: any; currentUserEmail?: string | null; onDone?: () => void }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [confirming, setConfirming] = useState<null | "revoke" | "decline">(null);
@@ -29,8 +31,9 @@ export default function InvitationActions({ invitation, currentUser, currentUser
       setDone(true);
       onDone?.();
       router.refresh();
+      showToast("Einladung zurückgezogen", "success");
     } catch (e: any) {
-      alert("Löschen fehlgeschlagen: " + (e.message || e));
+      showToast("Löschen fehlgeschlagen: " + (e.message || e), "error");
     } finally {
       setLoading(false);
       setConfirming(null);
@@ -53,8 +56,9 @@ export default function InvitationActions({ invitation, currentUser, currentUser
       setDone(true);
       onDone?.();
       router.refresh();
+      showToast("Einladung angenommen", "success");
     } catch (e: any) {
-      alert("Aktion fehlgeschlagen: " + (e.message || e));
+      showToast("Aktion fehlgeschlagen: " + (e.message || e), "error");
     } finally {
       setLoading(false);
     }
@@ -68,8 +72,9 @@ export default function InvitationActions({ invitation, currentUser, currentUser
       setDone(true);
       onDone?.();
       router.refresh();
+      showToast("Einladung abgelehnt", "info");
     } catch (e: any) {
-      alert("Aktion fehlgeschlagen: " + (e.message || e));
+      showToast("Aktion fehlgeschlagen: " + (e.message || e), "error");
     } finally {
       setLoading(false);
       setConfirming(null);
@@ -84,10 +89,10 @@ export default function InvitationActions({ invitation, currentUser, currentUser
   const isRecipient = invitation.invited_user_id === currentUser || isSameEmail();
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
       {loading && <LoadingOverlay />}
       {isSender && confirming === "revoke" && (
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <button onClick={revoke} disabled={loading} className="rounded px-3 py-1 bg-red-600 text-white text-sm">Rückziehen bestätigen</button>
           <button onClick={() => setConfirming(null)} disabled={loading} className="rounded px-3 py-1 border">Abbrechen</button>
         </div>
@@ -99,7 +104,7 @@ export default function InvitationActions({ invitation, currentUser, currentUser
         <>
           <button onClick={accept} className="rounded px-3 py-1 bg-green-600 text-white text-sm">Annehmen</button>
           {confirming === "decline" && (
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <button onClick={decline} disabled={loading} className="rounded px-3 py-1 bg-red-600 text-white text-sm">Ablehnen bestätigen</button>
               <button onClick={() => setConfirming(null)} disabled={loading} className="rounded px-3 py-1 border">Abbrechen</button>
             </div>

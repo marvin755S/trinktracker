@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useToast } from "@/components/Toast";
 
 export default function MemberList({
   members,
@@ -17,6 +18,7 @@ export default function MemberList({
   isOwner: boolean;
 }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
@@ -32,13 +34,14 @@ export default function MemberList({
       });
       const json = await res.json();
       if (!res.ok) {
-        alert("Entfernen fehlgeschlagen: " + (json?.error || res.statusText));
+        showToast("Entfernen fehlgeschlagen: " + (json?.error || res.statusText), "error");
         return;
       }
+      showToast("Mitglied entfernt", "success");
       router.refresh();
     } catch (e) {
       console.error(e);
-      alert("Entfernen fehlgeschlagen");
+      showToast("Entfernen fehlgeschlagen", "error");
     } finally {
       setLoadingId(null);
       setConfirmingId(null);

@@ -119,6 +119,11 @@ body {
   border-color: #52525b;
 }
 
+/* Hover-Effekt für Gruppen-Karten im Dark Mode beibehalten */
+:is(html.dark, [data-theme="dark"]) .hover\:border-sky-400:hover {
+  border-color: #38bdf8;
+}
+
 :is(html.dark, [data-theme="dark"]) .text-zinc-500,
 :is(html.dark, [data-theme="dark"]) .text-zinc-600,
 :is(html.dark, [data-theme="dark"]) .text-zinc-700 {

@@ -1,13 +1,14 @@
 "use client";
 
 import InviteMembers from "./InviteMembers";
-import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { useToast } from "@/components/Toast";
 
 export default function GroupActions({ groupId, isOwner }: { groupId: string; isOwner: boolean }) {
   const router = useRouter();
+  const { showToast } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState<null | "delete" | "leave">(null);
@@ -24,13 +25,14 @@ export default function GroupActions({ groupId, isOwner }: { groupId: string; is
       const json = await res.json();
       console.debug("deleteGroup: server response", json);
       if (!res.ok) {
-        alert("Löschen fehlgeschlagen: " + (json?.error || res.statusText));
+        showToast("Löschen fehlgeschlagen: " + (json?.error || res.statusText), "error");
         return;
       }
+      showToast("Gruppe gelöscht", "success");
       await router.push("/dashboard");
     } catch (e) {
       console.error("deleteGroup: unexpected error", e);
-      alert("Löschen fehlgeschlagen");
+      showToast("Löschen fehlgeschlagen", "error");
     } finally {
       setLoading(false);
       setConfirming(null);
@@ -47,13 +49,14 @@ export default function GroupActions({ groupId, isOwner }: { groupId: string; is
       });
       const json = await res.json();
       if (!res.ok) {
-        alert("Verlassen fehlgeschlagen: " + (json?.error || res.statusText));
+        showToast("Verlassen fehlgeschlagen: " + (json?.error || res.statusText), "error");
         return;
       }
+      showToast("Gruppe verlassen", "success");
       await router.push("/dashboard");
     } catch (e) {
       console.error("leaveGroup: unexpected error", e);
-      alert("Verlassen fehlgeschlagen");
+      showToast("Verlassen fehlgeschlagen", "error");
     } finally {
       setLoading(false);
       setConfirming(null);

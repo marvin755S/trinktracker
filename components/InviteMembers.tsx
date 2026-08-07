@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/components/Toast";
 
 type ProfileResult = { id: string; name: string; email?: string };
 
@@ -13,6 +14,7 @@ export default function InviteMembers({ groupId }: { groupId: string }) {
   const [selectedUsers, setSelectedUsers] = useState<ProfileResult[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { showToast } = useToast();
   const supabaseRef = useRef(createClient());
 
   // Debounced search when typing
@@ -60,10 +62,10 @@ export default function InviteMembers({ groupId }: { groupId: string }) {
       }
       setSelectedUsers([]);
       router.refresh();
-      alert("Einladungen gesendet");
+      showToast("Einladungen gesendet", "success");
     } catch (e: any) {
       const msg = e?.message ?? (e?.error ?? "Senden fehlgeschlagen");
-      alert(`Senden fehlgeschlagen: ${msg}`);
+      showToast(`Senden fehlgeschlagen: ${msg}`, "error");
     } finally {
       setLoading(false);
     }

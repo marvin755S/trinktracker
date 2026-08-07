@@ -484,7 +484,14 @@ diagnostics/
 
 # Nächster sinnvoller Schritt
 
-Die Datenbank ist konsolidiert (Fix-Migration `20260807120000_consolidated_fixes.sql`).
+Die Datenbank ist konsolidiert (Fix-Migration `20260807120000_consolidated_fixes.sql` + `20260807130000_allow_invited_users_to_view_group_names.sql`).
+
+## UI-Verbesserungen (umgesetzt)
+
+- ✅ Toast-System (`components/Toast.tsx`) – ersetzt alle Browser-alert()-Aufrufe
+- ✅ Mobile: Einladungs-Buttons untereinander statt gequetscht
+- ✅ Dark Mode: Hover-Effekt auf Gruppen-Karten (blauer Rahmen) funktioniert
+- ✅ Einladungen zeigen Gruppennamen statt Gruppen-ID (RLS-Policy erweitert)
 
 Mögliche nächste Features:
 
@@ -503,7 +510,6 @@ Mögliche nächste Features:
 3. **UI-Polish**
    - Mobile Optimierung
    - Dark Mode
-   - Toast-Nachrichten statt alert()
    - Ladeanimationen
 
 4. **Fehlerbehandlung & Tests**
