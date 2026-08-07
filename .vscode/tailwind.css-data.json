@@ -1,0 +1,39 @@
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@theme",
+      "description": "Tailwind CSS v4 theme directive – defines design tokens (colors, fonts, etc.)",
+      "references": [
+        {
+          "name": "Tailwind CSS v4 Documentation",
+          "url": "https://tailwindcss.com/docs/theme"
+        }
+      ]
+    },
+    {
+      "name": "@apply",
+      "description": "Tailwind CSS utility – applies utility classes to custom CSS"
+    },
+    {
+      "name": "@utility",
+      "description": "Tailwind CSS v4 – defines a custom utility"
+    },
+    {
+      "name": "@variant",
+      "description": "Tailwind CSS v4 – defines a custom variant"
+    },
+    {
+      "name": "@source",
+      "description": "Tailwind CSS v4 – explicitly registers source files"
+    },
+    {
+      "name": "@config",
+      "description": "Tailwind CSS v4 – loads a legacy JavaScript config"
+    },
+    {
+      "name": "@plugin",
+      "description": "Tailwind CSS v4 – loads a plugin"
+    }
+  ]
+}
