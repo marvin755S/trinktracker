@@ -94,23 +94,7 @@ export default async function InvitationsPage() {
       <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-6">
         <h2 className="text-lg font-semibold">Deine Einladungen</h2>
         {invitationsError ? (
-          <div className="mt-2 text-sm text-red-600">
-            Die Tabelle "invitations" existiert nicht oder ein Fehler ist aufgetreten.
-            <div className="mt-2 text-sm text-zinc-700">
-              Empfohlenes SQL zum Erstellen der Tabelle (gruppe_id ist bigint in deinem Schema):
-              <pre className="mt-2 rounded bg-zinc-100 p-2 text-xs">
-CREATE TABLE public.invitations (
-  id uuid primary key default gen_random_uuid(),
-  group_id bigint not null references public.groups(id) on delete cascade,
-  invited_email text,
-  invited_user_id uuid,
-  status text default 'pending',
-  created_by uuid,
-  created_at timestamptz default now()
-);
-              </pre>
-            </div>
-          </div>
+          <p className="mt-2 text-sm text-red-600">Fehler beim Laden der Einladungen.</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {outgoing.length === 0 && <li className="text-sm text-zinc-500">Keine gesendeten Einladungen</li>}

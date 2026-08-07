@@ -91,46 +91,46 @@ body {
   color: #27272a;
 }
 
-[data-theme="dark"] {
+:is(html.dark, [data-theme="dark"]) {
   --background: #18181b;
   --foreground: #f4f4f5;
 }
 
-[data-theme="dark"] .loading-overlay {
+:is(html.dark, [data-theme="dark"]) .loading-overlay {
   background: rgb(24 24 27 / 0.58);
 }
 
-[data-theme="dark"] .bg-white {
+:is(html.dark, [data-theme="dark"]) .bg-white {
   background-color: #27272a;
 }
 
-[data-theme="dark"] .bg-zinc-50 {
+:is(html.dark, [data-theme="dark"]) .bg-zinc-50 {
   background-color: #18181b;
 }
 
-[data-theme="dark"] .bg-zinc-100,
-[data-theme="dark"] .hover\:bg-zinc-100:hover {
+:is(html.dark, [data-theme="dark"]) .bg-zinc-100,
+:is(html.dark, [data-theme="dark"]) .hover\:bg-zinc-100:hover {
   background-color: #3f3f46;
 }
 
-[data-theme="dark"] .border-zinc-200,
-[data-theme="dark"] .border-zinc-300,
-[data-theme="dark"] .divide-zinc-100 > :not(:last-child) {
+:is(html.dark, [data-theme="dark"]) .border-zinc-200,
+:is(html.dark, [data-theme="dark"]) .border-zinc-300,
+:is(html.dark, [data-theme="dark"]) .divide-zinc-100 > :not(:last-child) {
   border-color: #52525b;
 }
 
-[data-theme="dark"] .text-zinc-500,
-[data-theme="dark"] .text-zinc-600,
-[data-theme="dark"] .text-zinc-700 {
+:is(html.dark, [data-theme="dark"]) .text-zinc-500,
+:is(html.dark, [data-theme="dark"]) .text-zinc-600,
+:is(html.dark, [data-theme="dark"]) .text-zinc-700 {
   color: #d4d4d8;
 }
 
-[data-theme="dark"] .text-zinc-950 {
+:is(html.dark, [data-theme="dark"]) .text-zinc-950 {
   color: #fafafa;
 }
 
-[data-theme="dark"] input,
-[data-theme="dark"] select {
+:is(html.dark, [data-theme="dark"]) input,
+:is(html.dark, [data-theme="dark"]) select {
   background-color: #18181b;
   color: #f4f4f5;
 }

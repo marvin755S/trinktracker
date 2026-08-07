@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 
 type NavigationItem = {
@@ -29,21 +29,19 @@ export default function Sidebar({
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const router = useRouter();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const savedTheme = window.localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      const frame = window.requestAnimationFrame(() => {
-        setTheme("dark");
-        document.documentElement.dataset.theme = "dark";
-      });
-      return () => window.cancelAnimationFrame(frame);
-    }
+    const nextTheme = savedTheme === "dark" ? "dark" : "light";
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+    document.documentElement.classList.toggle("dark", nextTheme === "dark");
   }, []);
 
   function toggleTheme() {
     const nextTheme = theme === "light" ? "dark" : "light";
     setTheme(nextTheme);
     document.documentElement.dataset.theme = nextTheme;
+    document.documentElement.classList.toggle("dark", nextTheme === "dark");
     window.localStorage.setItem("theme", nextTheme);
   }
 
@@ -110,7 +108,7 @@ export default function Sidebar({
       <button
         aria-label="Menü öffnen"
         onClick={() => setOpen((v) => !v)}
-        className={`${open ? 'hidden' : ''} fixed top-3 left-3 z-60 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-zinc-800 shadow lg:hidden`}
+        className={`${open ? 'hidden' : ''} fixed top-3 left-3 z-60 inline-flex h-10 w-10 items-center justify-center rounded-lg ${theme === "light" ? "bg-white" : "bg-zinc-800"} shadow lg:hidden`}
       >
         <svg className="h-6 w-6 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -120,11 +118,11 @@ export default function Sidebar({
       {/* Mobile drawer */}
       <div className={`fixed inset-0 z-40 lg:hidden ${open ? '' : 'pointer-events-none'}`} aria-hidden={!open}>
         <div className={`fixed inset-0 bg-black/40 transition-opacity ${open ? 'opacity-100' : 'opacity-0'}`} onClick={() => setOpen(false)} />
-        <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-white dark:bg-zinc-900 px-5 pt-12 pb-6 shadow-lg transition-transform ${open ? 'translate-x-0' : '-translate-x-full'}`}>
+        <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform ${theme === "light" ? "bg-white" : "bg-zinc-900"} px-5 pt-12 pb-6 shadow-lg transition-transform ${open ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="mb-4 relative">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-sky-600 dark:text-sky-400">Drink Tracker</p>
+                <p className={`text-sm font-medium ${theme === "light" ? "text-sky-600" : "text-sky-400"}`}>Drink Tracker</p>
                 <div className="mt-2 flex items-center gap-2">
                   {avatarUrl ? <img className="h-9 w-9 rounded-full object-cover" src={avatarUrl} alt="Profilbild" /> : <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-700">{(name || "P").slice(0, 1).toUpperCase()}</div>}
                   <p className="truncate text-lg font-semibold">{name || "Mein Profil"}</p>
@@ -165,7 +163,7 @@ export default function Sidebar({
                     <Link
                       href={`/groups/${g.id}`}
                       onClick={() => setOpen(false)}
-                      className={`block rounded-lg px-3 py-2 text-sm transition ${isActive ? "bg-sky-600 text-white" : "text-zinc-600 hover:bg-zinc-100"}`}
+                      className={`block rounded-lg px-3 py-2 text-sm transition ${isActive ? "bg-sky-600 text-white" : `${theme === "light" ? "text-zinc-600" : "text-zinc-300"} hover:bg-zinc-100 hover:ring-2 hover:ring-sky-500 hover:ring-offset-2 ${theme === "light" ? "hover:ring-offset-white" : "hover:ring-offset-zinc-900"} ${theme === "dark" ? "hover:bg-zinc-800 hover:text-white" : ""}`}`}
                     >
                       <span className={`${isActive ? "font-semibold" : ""}`}>{g.name}</span>
                     </Link>
@@ -191,9 +189,9 @@ export default function Sidebar({
       </div>
 
       {/* Desktop sidebar (hidden on mobile) */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:right-auto lg:z-20 lg:w-64 lg:border-r lg:border-t-0 lg:px-5 lg:py-6 lg:block bg-white dark:bg-zinc-900 lg:shadow">
+      <aside className={`hidden lg:fixed lg:inset-y-0 lg:left-0 lg:right-auto lg:z-20 lg:w-64 lg:border-r lg:border-t-0 lg:px-5 lg:py-6 lg:block lg:shadow ${theme === "light" ? "bg-white" : "bg-zinc-900"}`}>
       <div className="hidden lg:block">
-        <p className="text-sm font-medium text-sky-600 dark:text-sky-400">Drink Tracker</p>
+        <p className={`text-sm font-medium ${theme === "light" ? "text-sky-600" : "text-sky-400"}`}>Drink Tracker</p>
         <div className="mt-2 flex items-center gap-2">
           {avatarUrl ? <img className="h-9 w-9 rounded-full object-cover" src={avatarUrl} alt="Profilbild" /> : <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-bold text-sky-700">{(name || "P").slice(0, 1).toUpperCase()}</div>}
           <p className="truncate text-lg font-semibold">{name || "Mein Profil"}</p>
@@ -228,7 +226,7 @@ export default function Sidebar({
               <li key={g.id}>
                 <Link
                   href={`/groups/${g.id}`}
-                  className={`block rounded-lg px-3 py-2 text-sm transition lg:text-left ${isActive ? "bg-sky-600 text-white" : "text-zinc-600 hover:bg-zinc-100"}`}
+                  className={`block rounded-lg px-3 py-2 text-sm transition lg:text-left ${isActive ? "bg-sky-600 text-white" : `${theme === "light" ? "text-zinc-600" : "text-zinc-300"} hover:bg-zinc-100 hover:ring-2 hover:ring-sky-500 hover:ring-offset-2 ${theme === "light" ? "hover:ring-offset-white" : "hover:ring-offset-zinc-900"} ${theme === "dark" ? "hover:bg-zinc-800 hover:text-white" : ""}`}`}
                 >
                   <span className={`${isActive ? "font-semibold" : ""}`}>{g.name}</span>
                 </Link>
