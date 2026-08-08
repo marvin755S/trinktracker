@@ -42,6 +42,10 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!email.trim() || !password) {
+      setMessage("Bitte fülle alle Felder aus.");
+      return;
+    }
     await login();
   }
 
@@ -59,6 +63,7 @@ export default function LoginPage() {
               placeholder="E-Mail"
               type="email"
               value={email}
+              required
               onChange={(e) => setEmail(e.target.value)}
             />
 
@@ -67,6 +72,7 @@ export default function LoginPage() {
               placeholder="Passwort"
               type="password"
               value={password}
+              required
               onChange={(e) => setPassword(e.target.value)}
             />
 

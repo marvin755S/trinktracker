@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
 import InvitationItem from "@/components/InvitationItem";
+import RealtimeRefresh from "@/components/RealtimeRefresh";
 
 // InviteForm moved to group actions; this page shows incoming and outgoing invitations
 
@@ -71,6 +72,7 @@ export default async function InvitationsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
+      <RealtimeRefresh tables={["invitations"]} />
       <h1 className="text-2xl font-bold">Einladungen</h1>
 
       <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-6">

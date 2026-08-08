@@ -5,6 +5,7 @@ import EventForm from "./event-form";
 import GroupActions from "@/components/GroupActions";
 import LeaderboardTable from "@/components/LeaderboardTable";
 import MemberList from "@/components/MemberList";
+import RealtimeRefresh from "@/components/RealtimeRefresh";
 /* eslint-disable @next/next/no-img-element */
 
 type GroupPageProps = {
@@ -86,6 +87,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
 
   return (
     <main className="mx-auto max-w-4xl space-y-8 px-6 py-10">
+      <RealtimeRefresh tables={["drinks", "group_members"]} />
       <Link href="/dashboard" className="text-sm font-medium text-sky-700 hover:underline">
         ← Zurück zum Dashboard
       </Link>

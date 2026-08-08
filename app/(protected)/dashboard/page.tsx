@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase-server";
 import CreateGroup from "./create-group";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import RealtimeRefresh from "@/components/RealtimeRefresh";
 
 type GroupMembership = {
   role: "owner" | "member";
@@ -36,6 +37,7 @@ export default async function Dashboard() {
 
   return (
     <main className="mx-auto max-w-4xl space-y-10 px-6 py-10">
+      <RealtimeRefresh tables={["groups", "group_members"]} />
       <header>
         <p className="text-sm font-medium text-sky-600">Drink Tracker</p>
         <h1 className="text-3xl font-bold">Deine Gruppen</h1>
