@@ -48,6 +48,9 @@ export default function RegisterPage() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/login`,
+          data: {
+            name: name.trim(),
+          },
         },
       });
 
@@ -58,6 +61,9 @@ export default function RegisterPage() {
 
       const user = data.user;
 
+      // The profile is created automatically by the database trigger
+      // on_auth_user_created. If it does not exist yet (e.g. because the
+      // trigger was not deployed), we try to create it here as a fallback.
       if (user) {
         const { error: profileError } = await supabase
           .from("profiles")
@@ -66,8 +72,8 @@ export default function RegisterPage() {
             name: name.trim(),
             approved: true,
           });
-
-        if (profileError) {
+        // Ignore RLS errors here – the trigger handles profile creation on signup.
+        if (profileError && profileError.code !== "42501") {
           setMessage(profileError.message);
           return;
         }
