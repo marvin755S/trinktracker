@@ -41,6 +41,11 @@ export default function CategoryManager({
     router.refresh();
   }
 
+  async function handleEditSubmit(e: React.FormEvent, id: number) {
+    e.preventDefault();
+    await saveCategory(id);
+  }
+
   async function moveAndDelete(id: number) {
     setMessage("");
     const result = await resolveCategoryDeletion({
@@ -81,15 +86,16 @@ export default function CategoryManager({
             <li key={category.id} className="py-3">
               <div className="flex items-center gap-2">
                 {editingId === category.id ? (
-                  <input className="min-w-0 flex-1 rounded-md border border-zinc-300 px-3 py-2" value={editingName} onChange={(event) => setEditingName(event.target.value)} />
+                  <form className="flex min-w-0 flex-1 items-center gap-2" onSubmit={(e) => handleEditSubmit(e, category.id)}>
+                    <input className="min-w-0 flex-1 rounded-md border border-zinc-300 px-3 py-2" value={editingName} onChange={(event) => setEditingName(event.target.value)} />
+                    <button className="rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white" type="submit">Speichern</button>
+                    <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => setEditingId(null)}>Abbrechen</button>
+                  </form>
                 ) : (
                   <span className="min-w-0 flex-1 font-medium">{category.name}</span>
                 )}
                 {editingId === category.id ? (
-                  <>
-                    <button className="rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white" type="button" onClick={() => saveCategory(category.id)}>Speichern</button>
-                    <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => setEditingId(null)}>Abbrechen</button>
-                  </>
+                  <></>
                 ) : (
                   <>
                     <button className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium" type="button" onClick={() => { setEditingId(category.id); setEditingName(category.name); }}>Bearbeiten</button>

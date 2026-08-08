@@ -40,6 +40,11 @@ export default function LoginPage() {
     }
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await login();
+  }
+
   return (
     <>
       {loading && <LoadingOverlay />}
@@ -48,10 +53,11 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold">Einloggen</h1>
           <p className="mt-2 text-sm text-zinc-600">Melde dich mit deinem Account an.</p>
 
-          <div className="mt-6 space-y-4">
+          <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
             <input
               className="w-full rounded-md border border-zinc-200 px-3 py-2"
               placeholder="E-Mail"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -65,13 +71,13 @@ export default function LoginPage() {
             />
 
             <div className="flex items-center justify-between gap-4">
-              <button onClick={login} disabled={loading} className="rounded bg-sky-600 px-4 py-2 text-white">
+              <button type="submit" disabled={loading} className="rounded bg-sky-600 px-4 py-2 text-white">
                 Einloggen
               </button>
               <Link href="/register" className="text-sm text-sky-600 hover:underline">Noch kein Konto? Registrieren</Link>
             </div>
             {message && <p className="text-sm text-red-600">{message}</p>}
-          </div>
+          </form>
         </div>
       </main>
     </>

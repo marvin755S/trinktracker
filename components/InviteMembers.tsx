@@ -26,9 +26,13 @@ export default function InviteMembers({ groupId }: { groupId: string }) {
     }
     const handle = setTimeout(async () => {
       try {
-        // search by name only — profiles table does not reliably include email
+        // search by name OR email
         const q = `%${query}%`;
-        const { data } = await supabase.from("profiles").select("id, name").ilike("name", q).limit(10);
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, name, email")
+          .or(`name.ilike.${q},email.ilike.${q}`)
+          .limit(10);
         setResults((data ?? []) as ProfileResult[]);
       } catch (e) {
         setResults([]);
@@ -75,10 +79,10 @@ export default function InviteMembers({ groupId }: { groupId: string }) {
     <div className="space-y-3">
       {loading && <LoadingOverlay />}
       <div>
-        <label className="block text-sm text-zinc-700">Mitglieder suchen</label>
+        <label className="block text-sm text-zinc-700">Mitglieder suchen (Name oder E-Mail)</label>
         <div className="mt-2 flex items-center gap-2">
           <span className="text-zinc-400">🔍</span>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Name" className="w-full rounded-full border px-4 py-2 shadow-sm" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Name oder E-Mail" className="w-full rounded-full border px-4 py-2 shadow-sm" />
         </div>
         <ul className="mt-2 space-y-1 max-h-40 overflow-auto">
           {results.map((r) => (
@@ -102,6 +106,7 @@ export default function InviteMembers({ groupId }: { groupId: string }) {
             <li key={u.id} className="flex items-center justify-between">
               <div>
                 <div className="text-sm">{u.name}</div>
+                {u.email && <div className="text-xs text-zinc-500">{u.email}</div>}
               </div>
               <button type="button" onClick={() => setSelectedUsers((prev) => prev.filter((x) => x.id !== u.id))} className="text-sm text-red-500">Entfernen</button>
             </li>
@@ -111,11 +116,13 @@ export default function InviteMembers({ groupId }: { groupId: string }) {
 
       {/* Email input removed: invites are created by invited_user_id only */}
 
-      <div className="flex items-center gap-2">
-        <button onClick={sendInvites} disabled={loading} className="rounded bg-sky-600 px-3 py-2 text-white">
-          {loading ? "Sende..." : "Einladen"}
-        </button>
-      </div>
+      <form onSubmit={(e) => { e.preventDefault(); sendInvites(); }}>
+        <div className="flex items-center gap-2">
+          <button type="submit" disabled={loading || selectedUsers.length === 0} className="rounded bg-sky-600 px-3 py-2 text-white">
+            {loading ? "Sende..." : "Einladen"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
