@@ -20,27 +20,23 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
 
-      console.debug("login: calling signInWithPassword", { email });
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      console.debug("login: signInWithPassword result", { data, error });
 
       if (error) {
         setMessage(error.message);
         return;
       }
 
-      console.debug("login: navigating to /dashboard");
+      // Keep the loading overlay visible while navigating to the dashboard.
+      // The protected route's own loading.tsx will take over from here.
       await router.push("/dashboard");
-      console.debug("login: navigation complete");
     } catch (err) {
       console.error("login: unexpected error", err);
       setMessage((err as any)?.message ?? "Login fehlgeschlagen");
-    } finally {
       setLoading(false);
-      console.debug("login: loading=false");
     }
   }
 
